@@ -22,7 +22,8 @@ from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
 from scanner.notify import notify_report
 from scanner.risk import attach_atr_risk, setup_risk_plan
-from scanner.journal import log_signals
+from scanner.journal import log_signals, detector_recent_form
+from scanner.regime import regime_label
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
 BACKTEST_RESULTS_PATH = Path(__file__).parent / "backtest_results.json"
@@ -129,13 +130,23 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
                                       risk_cfg.get("reward_risk_ratio", 2.0),
                                       risk_cfg.get("max_stop_pct"))
             bias, strength = confluence_score(signals, weights)
+            # Regime is descriptive context, not a hard filter - a choppy
+            # reading doesn't block an alert, but tells you to size down /
+            # be more skeptical of continuation-style signals right now.
+            regime = regime_label(df["close"].values, len(df) - 1)
+            risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
+                                   avg_returns, risk_cfg.get("min_calibrated_move_pct", 0.3),
+                                   risk_cfg.get("account_size"), risk_cfg.get("account_risk_pct", 1.0))
+            if risk:
+                risk["recent_form"] = detector_recent_form(risk["based_on"], bias,
+                                                           cfg.get("journal", {}).get("form_lookback", 5))
             result["timeframes"][tf] = {
                 "close": close,
                 "bias": bias,
                 "strength": strength,
+                "regime": regime,
                 "signals": signals,
-                "risk": setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
-                                        avg_returns, risk_cfg.get("min_calibrated_move_pct", 0.3)),
+                "risk": risk,
             }
         time.sleep(0.15)  # be polite to the API
     return result
@@ -184,7 +195,7 @@ def main():
             if data["strength"] >= min_conf:
                 if cfg.get("mtf", {}).get("require_agreement", False) and not data["htf_agrees"]:
                     continue
-                print(f"{symbol} [{tf}]  {data['bias'].upper()} (strength {data['strength']})  close={data['close']:.6g}  [HTF: {data['htf_note']}]")
+                print(f"{symbol} [{tf}]  {data['bias'].upper()} (strength {data['strength']})  close={data['close']:.6g}  [HTF: {data['htf_note']}]  [regime: {data['regime']}]")
                 for s in data["signals"]:
                     print(f"    - {s['name']}: {s['detail']}")
                 if data["risk"]:
@@ -193,6 +204,14 @@ def main():
                     print(f"    risk: entry={r['entry']:.6g} stop={r['stop']:.6g} "
                           f"target={r['target']:.6g} (R:R {rr}, based on {r['based_on']}, "
                           f"target: {r['target_basis']})")
+                    if r.get("position"):
+                        p = r["position"]
+                        print(f"    position: risk {p['account_risk_pct']}% (${p['dollar_risk']}) "
+                              f"-> {p['units']:g} units (~${p['position_value']})")
+                    if r.get("recent_form"):
+                        f = r["recent_form"]
+                        print(f"    recent form for {r['based_on']}/{data['bias']}: "
+                              f"{f['wins']}W-{f['losses']}L (last {f['n']})")
                 print()
 
     report["results"].sort(key=lambda r: r["max_strength"], reverse=True)

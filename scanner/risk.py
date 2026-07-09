@@ -64,9 +64,34 @@ def calibrate_target(entry: float, detector_name: str, direction: str,
     return entry * (1 + avg_pct / 100)
 
 
+def position_size(entry: float, stop: float, account_size: float | None,
+                  account_risk_pct: float) -> dict | None:
+    """
+    Professional risk management rule: risk a fixed small % of account
+    equity per trade, sized off the actual stop distance - never a fixed
+    unit count and never scaled by "how sure you feel" about the setup.
+    Returns None if account_size isn't configured (we don't guess it).
+    """
+    if account_size is None or account_size <= 0:
+        return None
+    risk_per_unit = abs(entry - stop)
+    if risk_per_unit <= 0:
+        return None
+    dollar_risk = account_size * account_risk_pct / 100
+    units = dollar_risk / risk_per_unit
+    return {
+        "account_risk_pct": account_risk_pct,
+        "dollar_risk": round(float(dollar_risk), 2),
+        "units": round(float(units), 6),
+        "position_value": round(float(units * entry), 2),
+    }
+
+
 def setup_risk_plan(signals: list[dict], bias: str, close: float,
                     min_risk_reward: float = 1.0, avg_returns: dict | None = None,
-                    min_calibrated_move_pct: float = 0.3) -> dict | None:
+                    min_calibrated_move_pct: float = 0.3,
+                    account_size: float | None = None,
+                    account_risk_pct: float = 1.0) -> dict | None:
     """
     Pick one consolidated entry/stop/target for the setup: prefer a
     structural (pattern-based) level over a generic ATR one, since it's
@@ -112,10 +137,11 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
     risk = abs(close - stop)
     reward = abs(target - close)
     return {
-        "entry": round(close, 6),
-        "stop": round(stop, 6),
-        "target": round(target, 6),
-        "risk_reward": round(reward / risk, 2) if risk > 0 else None,
+        "entry": round(float(close), 6),
+        "stop": round(float(stop), 6),
+        "target": round(float(target), 6),
+        "risk_reward": round(float(reward / risk), 2) if risk > 0 else None,
         "based_on": pick["name"],
         "target_basis": "historical avg move" if calibrated else "pattern/ATR estimate",
+        "position": position_size(close, stop, account_size, account_risk_pct),
     }

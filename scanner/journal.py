@@ -140,6 +140,29 @@ def check_open_entries(path: Path = JOURNAL_PATH, horizon_candles: int = 20,
     return updated
 
 
+def detector_recent_form(detector_name: str, direction: str, n: int = 5,
+                         path: Path = JOURNAL_PATH) -> dict | None:
+    """
+    Win/loss record from the last n decided (win/loss - excludes still-open
+    and inconclusive/expired) journal entries for this specific detector +
+    direction. Surfaced in alerts so a detector on a current losing streak
+    doesn't get acted on with the same confidence as one that's been
+    working lately - the point isn't to hide it, it's to make "this method
+    hasn't been working recently" visible instead of trading on blind faith
+    in a backtested average that may not reflect current conditions.
+    Returns None if there isn't enough resolved history yet to be meaningful.
+    """
+    entries = [e for e in _load(path)
+              if e["based_on"] == detector_name and e["bias"] == direction
+              and e["status"] in ("win", "loss")]
+    if len(entries) < 2:
+        return None
+    entries.sort(key=lambda e: e["checked_at"] or e["logged_at"], reverse=True)
+    recent = entries[:n]
+    wins = sum(1 for e in recent if e["status"] == "win")
+    return {"n": len(recent), "wins": wins, "losses": len(recent) - wins}
+
+
 def summarize(path: Path = JOURNAL_PATH) -> dict:
     """Win rate and average return per detector, from resolved journal entries only."""
     entries = [e for e in _load(path) if e["status"] in ("win", "loss", "expired")]

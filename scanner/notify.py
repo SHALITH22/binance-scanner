@@ -54,6 +54,9 @@ def format_setup(symbol: str, tf: str, data: dict) -> str:
              f"(strength {data['strength']})  close={data['close']:.6g}"]
     if "htf_note" in data:
         lines.append(f"HTF: {escape(data['htf_note'])}")
+    if data.get("regime"):
+        lines.append(f"Regime: {escape(data['regime'])}"
+                     + (" - lower conviction, market is choppy right now" if data["regime"] == "choppy" else ""))
     for s in data["signals"]:
         lines.append(f"- {escape(s['name'])}: {escape(s['detail'])}")
     if data.get("risk"):
@@ -62,6 +65,14 @@ def format_setup(symbol: str, tf: str, data: dict) -> str:
         lines.append(f"Risk: entry {r['entry']:.6g} / stop {r['stop']:.6g} / "
                      f"target {r['target']:.6g} (R:R {rr}, based on {escape(r['based_on'])}, "
                      f"target: {escape(r['target_basis'])})")
+        if r.get("position"):
+            p = r["position"]
+            lines.append(f"Position size: risk {p['account_risk_pct']}% (${p['dollar_risk']}) "
+                         f"-&gt; {p['units']:g} units (~${p['position_value']})")
+        if r.get("recent_form"):
+            f = r["recent_form"]
+            lines.append(f"Recent form for {escape(r['based_on'])}/{escape(data['bias'])}: "
+                         f"{f['wins']}W-{f['losses']}L (last {f['n']})")
     return "\n".join(lines)
 
 

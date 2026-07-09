@@ -29,33 +29,10 @@ import yaml
 from scanner.data import get_klines, get_all_usdt_pairs
 from scanner.indicators import enrich
 from scanner.patterns import run_all_detectors
+from scanner.regime import regime_label
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
 WARMUP = 210  # candles before signals count (EMA200 needs history)
-REGIME_LOOKBACK = 20    # candles used to measure trend efficiency
-REGIME_THRESHOLD = 0.3  # efficiency ratio >= this counts as "trending"
-
-
-def efficiency_ratio(closes: np.ndarray, i: int, n: int = REGIME_LOOKBACK) -> float | None:
-    """
-    Kaufman's Efficiency Ratio: net price change / total path length over
-    the window, causal (only uses closes up to and including i). Near 1.0
-    means price moved in a straight line (trending); near 0 means it
-    churned back and forth with little net progress (choppy/ranging).
-    """
-    if i < n:
-        return None
-    window = closes[i - n:i + 1]
-    net = abs(window[-1] - window[0])
-    path = np.abs(np.diff(window)).sum()
-    return net / path if path > 0 else 0.0
-
-
-def regime_label(closes: np.ndarray, i: int) -> str:
-    er = efficiency_ratio(closes, i)
-    if er is None:
-        return "unknown"
-    return "trending" if er >= REGIME_THRESHOLD else "choppy"
 
 
 def load_config() -> dict:

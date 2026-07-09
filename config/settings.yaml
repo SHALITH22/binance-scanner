@@ -119,6 +119,13 @@ risk:
   # skipped if that average move is smaller than this (percent), since a
   # near-zero empirical move isn't a meaningful target either.
   min_calibrated_move_pct: 0.3
+  # Professional rule: risk a fixed small % of account equity per trade,
+  # sized off the actual stop distance - never a guess, never scaled by
+  # conviction. Set account_size to your real trading account value (in
+  # quote currency, e.g. USDT) to see suggested position sizes in alerts;
+  # leave null to omit sizing entirely (we never guess your account size).
+  account_size: null
+  account_risk_pct: 1.0
 
 # --- Live signal journal ---
 # Logs every setup meeting min_confluence to journal.jsonl, then
@@ -127,6 +134,10 @@ risk:
 journal:
   enabled: true
   horizon_candles: 20  # if neither stop nor target is hit within this many candles, mark "expired"
+  # How many of a detector's most recent decided (win/loss) trades to show
+  # as its "recent form" in alerts - surfaces a current losing streak so
+  # you don't act on a detector's backtested average as if it still applies.
+  form_lookback: 5
 
 # --- Output ---
 output:
