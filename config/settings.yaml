@@ -15,13 +15,56 @@
 scan_all: false
 pairs_mode: top_volume
 top_n_pairs: 100
-# Fallback only - used if a live top-volume fetch fails (e.g. Binance
-# outage) or if pairs_mode is set to "static".
+# Fallback only - used if a live top-volume fetch fails, e.g. when
+# binance.com is unreachable from a geo-blocked cloud IP (GitHub Actions).
+# In that case pair-discovery correctly returns empty rather than silently
+# substituting Binance.US's different symbol catalog (see scanner/data.py -
+# that's what caused LMWRUSDT, a Binance.US-only symbol, to show up in an
+# alert even though it doesn't exist on real/global Binance). This list is
+# a snapshot of the top pairs by volume verified directly against global
+# Binance, so cloud runs still get meaningful coverage instead of dropping
+# to just 4 coins when the live fetch can't reach binance.com at all.
 pairs:
   - BTCUSDT
   - ETHUSDT
   - SOLUSDT
+  - LABUSDT
+  - ZECUSDT
+  - EVAAUSDT
+  - HYPEUSDT
+  - XRPUSDT
+  - TAGUSDT
+  - DOGEUSDT
   - BNBUSDT
+  - POWERUSDT
+  - VANRYUSDT
+  - EDGEUSDT
+  - SKYAIUSDT
+  - WLDUSDT
+  - ADAUSDT
+  - ARBUSDT
+  - 1000PEPEUSDT
+  - NEARUSDT
+  - UNIUSDT
+  - SUIUSDT
+  - ESPORTSUSDT
+  - AVAXUSDT
+  - AAVEUSDT
+  - PAXGUSDT
+  - THEUSDT
+  - LITUSDT
+  - ENAUSDT
+  - LINKUSDT
+  - BASEDUSDT
+  - SLXUSDT
+  - OUSDT
+  - OGNUSDT
+  - TACUSDT
+  - TAOUSDT
+  - ALLOUSDT
+  - SENTUSDT
+  - XLMUSDT
+  - FILUSDT
   # - FOLKSUSDT   # NOT a valid Binance pair (verified 2026-07-09) - did you mean FLOKIUSDT?
 
 # Timeframes to analyze (Binance kline intervals)

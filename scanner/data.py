@@ -27,38 +27,54 @@ KLINE_COLUMNS = [
 ]
 
 
-def _endpoint_chain(futures: bool, kind: str) -> list[str]:
-    """Ordered list of URLs to try: requested endpoint, its binance.com
+def _endpoint_chain(futures: bool, kind: str, include_us: bool = True) -> list[str]:
+    """
+    Ordered list of URLs to try: requested endpoint, its binance.com
     sibling, then Binance.US - deduped in case futures=False collapses
-    the first two."""
+    the first two.
+
+    include_us=False restricts the chain to binance.com only. Binance.US is
+    a separate, smaller exchange with a partially different symbol catalog
+    (confirmed: some symbols exist on one but not the other) - fine as a
+    last-resort DATA source for a symbol we already know is a real global
+    Binance pair, but never safe as a source for deciding WHICH symbols to
+    scan in the first place. Pair-discovery functions must not use it.
+    """
     path = f"fapi/v1/{kind}" if futures else f"api/v3/{kind}"
     sibling_path = f"api/v3/{kind}" if futures else f"fapi/v1/{kind}"
     chain = [
         f"{FUTURES_URL if futures else BASE_URL}/{path}",
         f"{BASE_URL if futures else FUTURES_URL}/{sibling_path}",
-        f"{US_URL}/api/v3/{kind}",
     ]
+    if include_us:
+        chain.append(f"{US_URL}/api/v3/{kind}")
     seen = set()
     return [u for u in chain if not (u in seen or seen.add(u))]
 
 
 def get_all_usdt_pairs(futures: bool = True) -> list[str]:
-    """Fetch every actively trading USDT pair, falling back across endpoints on geo-block."""
-    resp = None
-    for url in _endpoint_chain(futures, "exchangeInfo"):
+    """
+    Fetch every actively trading USDT pair from the real global Binance
+    (futures, falling back to spot on geo-block - never Binance.US, which
+    has a different symbol catalog and would return the wrong universe).
+    Returns an empty list if binance.com is unreachable (geo-blocked)
+    rather than silently substituting a different exchange's pairs.
+    """
+    for url in _endpoint_chain(futures, "exchangeInfo", include_us=False):
         resp = requests.get(url, timeout=15)
-        if resp.status_code != 451:
-            break
-        futures = False  # anything past the first hop has no contractType field
-    resp.raise_for_status()
-    symbols = resp.json()["symbols"]
-    return [
-        s["symbol"] for s in symbols
-        if s["symbol"].endswith("USDT")
-        and s.get("status", s.get("contractStatus")) == "TRADING"
-        # futures exchangeInfo also lists delivery contracts - keep perpetuals only
-        and (not futures or s.get("contractType") == "PERPETUAL")
-    ]
+        if resp.status_code == 451:
+            futures = False  # try the sibling before giving up
+            continue
+        resp.raise_for_status()
+        symbols = resp.json()["symbols"]
+        return [
+            s["symbol"] for s in symbols
+            if s["symbol"].endswith("USDT")
+            and s.get("status", s.get("contractStatus")) == "TRADING"
+            # futures exchangeInfo also lists delivery contracts - keep perpetuals only
+            and (not futures or s.get("contractType") == "PERPETUAL")
+        ]
+    return []
 
 
 # Stable-to-stable pairs (e.g. USDCUSDT) aren't meaningful for pattern
@@ -76,10 +92,17 @@ def get_top_pairs_by_volume(n: int = 100, futures: bool = True) -> list[str]:
     this is recomputed each run rather than read from a static list.
     One request returns every symbol's volume at once, so this costs a
     single extra API call regardless of N.
+
+    Only ever ranks against the real global Binance (never Binance.US -
+    see _endpoint_chain). Returns an empty list if binance.com is
+    unreachable; the caller falls back to the static pairs list rather
+    than getting a silently wrong set of coins.
     """
     valid = set(get_all_usdt_pairs(futures))
+    if not valid:
+        return []
     ticker = None
-    for url in _endpoint_chain(futures, "ticker/24hr"):
+    for url in _endpoint_chain(futures, "ticker/24hr", include_us=False):
         resp = requests.get(url, timeout=15)
         if resp.status_code == 451:
             continue
@@ -129,7 +152,12 @@ def get_klines(symbol: str, interval: str, limit: int = 300,
         for attempt in range(max_retries):
             try:
                 resp = requests.get(url, params=params, timeout=15)
-                if resp.status_code == 451:  # geo-blocked on this domain - try the next one
+                if resp.status_code in (451, 400):
+                    # 451 = geo-blocked here; 400 = this symbol isn't valid
+                    # on this specific market (e.g. spot-only, no futures
+                    # contract) - both are permanent for this URL, retrying
+                    # won't help, move straight to the next endpoint instead
+                    # of wasting 3 retries with backoff on a dead end.
                     break
                 if resp.status_code == 429:  # rate limited - back off
                     wait = int(resp.headers.get("Retry-After", 5))

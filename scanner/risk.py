@@ -10,6 +10,22 @@ consolidated entry/stop/target for the overall setup shown in the console
 and Telegram alert.
 """
 
+from math import floor, log10
+
+
+def round_sig(x: float, sig: int = 6) -> float:
+    """
+    Round to N significant figures, not N decimal places. round(x, 6) is
+    fine for a $63,000 BTC price but destroys almost all precision on a
+    $0.00000428 SHIB-style price - entry/stop/target all collapsing to the
+    same displayed "4e-06" is exactly that bug, not a coincidence.
+    """
+    if x == 0 or x != x:  # zero or NaN
+        return 0.0
+    digits = sig - int(floor(log10(abs(x)))) - 1
+    return round(x, digits)
+
+
 STRUCTURAL_NAMES = {
     "double_top", "double_bottom", "head_and_shoulders", "inverse_head_and_shoulders",
     "ascending_triangle", "descending_triangle", "rising_wedge", "falling_wedge",
@@ -82,7 +98,7 @@ def position_size(entry: float, stop: float, account_size: float | None,
     return {
         "account_risk_pct": account_risk_pct,
         "dollar_risk": round(float(dollar_risk), 2),
-        "units": round(float(units), 6),
+        "units": round_sig(float(units), 6),
         "position_value": round(float(units * entry), 2),
     }
 
@@ -137,9 +153,9 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
     risk = abs(close - stop)
     reward = abs(target - close)
     return {
-        "entry": round(float(close), 6),
-        "stop": round(float(stop), 6),
-        "target": round(float(target), 6),
+        "entry": round_sig(float(close), 6),
+        "stop": round_sig(float(stop), 6),
+        "target": round_sig(float(target), 6),
         "risk_reward": round(float(reward / risk), 2) if risk > 0 else None,
         "based_on": pick["name"],
         "target_basis": "historical avg move" if calibrated else "pattern/ATR estimate",

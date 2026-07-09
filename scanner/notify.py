@@ -49,9 +49,14 @@ def send_telegram(text: str, env: dict | None = None) -> bool:
         return False
 
 
-def format_setup(symbol: str, tf: str, data: dict) -> str:
+def format_setup(symbol: str, tf: str, data: dict, generated_at: str | None = None) -> str:
     lines = [f"<b>{escape(symbol)}</b> [{escape(tf)}] {escape(data['bias'].upper())} "
              f"(strength {data['strength']})  close={data['close']:.6g}"]
+    if generated_at:
+        # Price moves between this scan and whenever you actually read the
+        # message - this timestamp lets you judge how stale it might be by
+        # the time you act, rather than assuming the quoted price is "now".
+        lines.append(f"Scanned: {escape(generated_at)} UTC")
     if "htf_note" in data:
         lines.append(f"HTF: {escape(data['htf_note'])}")
     if data.get("regime"):
@@ -88,6 +93,10 @@ def notify_report(report: dict, cfg: dict) -> int:
         return 0
     min_strength = tg.get("min_strength", 3)
     only_agreeing = tg.get("only_htf_agreeing", True)
+    # "2026-07-10T05:23:11.123456+00:00" -> "05:23:11" - just the clock time,
+    # readable at a glance in a chat message.
+    generated_at = report.get("generated_at", "")
+    scan_time = generated_at[11:19] if len(generated_at) >= 19 else None
     sent = 0
     for res in report["results"]:
         for tf, data in res["timeframes"].items():
@@ -95,6 +104,6 @@ def notify_report(report: dict, cfg: dict) -> int:
                 continue
             if only_agreeing and not data.get("htf_agrees", True):
                 continue
-            if send_telegram(format_setup(res["symbol"], tf, data), env):
+            if send_telegram(format_setup(res["symbol"], tf, data, scan_time), env):
                 sent += 1
     return sent
