@@ -26,12 +26,36 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from scanner.data import get_klines
+from scanner.data import get_klines, get_all_usdt_pairs
 from scanner.indicators import enrich
 from scanner.patterns import run_all_detectors
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
 WARMUP = 210  # candles before signals count (EMA200 needs history)
+REGIME_LOOKBACK = 20    # candles used to measure trend efficiency
+REGIME_THRESHOLD = 0.3  # efficiency ratio >= this counts as "trending"
+
+
+def efficiency_ratio(closes: np.ndarray, i: int, n: int = REGIME_LOOKBACK) -> float | None:
+    """
+    Kaufman's Efficiency Ratio: net price change / total path length over
+    the window, causal (only uses closes up to and including i). Near 1.0
+    means price moved in a straight line (trending); near 0 means it
+    churned back and forth with little net progress (choppy/ranging).
+    """
+    if i < n:
+        return None
+    window = closes[i - n:i + 1]
+    net = abs(window[-1] - window[0])
+    path = np.abs(np.diff(window)).sum()
+    return net / path if path > 0 else 0.0
+
+
+def regime_label(closes: np.ndarray, i: int) -> str:
+    er = efficiency_ratio(closes, i)
+    if er is None:
+        return "unknown"
+    return "trending" if er >= REGIME_THRESHOLD else "choppy"
 
 
 def load_config() -> dict:
@@ -65,11 +89,26 @@ def backtest_df(df: pd.DataFrame, cfg: dict, horizons: list[int],
             if s["direction"] not in ("bullish", "bearish"):
                 continue
             row = {"source": label, "candle": i, "detector": s["name"],
-                   "direction": s["direction"]}
+                   "direction": s["direction"], "regime": regime_label(closes, i)}
             for h in horizons:
                 row[f"ret_{h}"] = closes[i + h] / closes[i] - 1
             rows.append(row)
     return rows
+
+
+def _summarize_groups(groups: dict, horizons: list[int]) -> dict:
+    summary = {}
+    for key, rs in sorted(groups.items()):
+        entry = {"signals": len(rs)}
+        direction = key[1] if isinstance(key, tuple) else key.split("/")[1]
+        for h in horizons:
+            rets = np.array([r[f"ret_{h}"] for r in rs])
+            wins = (rets > 0) if direction == "bullish" else (rets < 0)
+            entry[f"h{h}"] = {"win_rate": round(float(wins.mean()), 3),
+                              "avg_ret_pct": round(float(rets.mean()) * 100, 3)}
+        name = "/".join(key) if isinstance(key, tuple) else key
+        summary[name] = entry
+    return summary
 
 
 def summarize(rows: list[dict], horizons: list[int]) -> dict:
@@ -77,31 +116,36 @@ def summarize(rows: list[dict], horizons: list[int]) -> dict:
     for r in rows:
         groups[(r["detector"], r["direction"])].append(r)
         groups[("ALL", r["direction"])].append(r)
-    summary = {}
-    for (det, direction), rs in sorted(groups.items()):
-        entry = {"signals": len(rs)}
-        for h in horizons:
-            rets = np.array([r[f"ret_{h}"] for r in rs])
-            wins = (rets > 0) if direction == "bullish" else (rets < 0)
-            entry[f"h{h}"] = {"win_rate": round(float(wins.mean()), 3),
-                              "avg_ret_pct": round(float(rets.mean()) * 100, 3)}
-        summary[f"{det}/{direction}"] = entry
-    return summary
+    return _summarize_groups(groups, horizons)
 
 
-def print_summary(summary: dict, horizons: list[int]):
-    hdr = f"{'detector/direction':<28}{'n':>6}"
+def summarize_by_regime(rows: list[dict], horizons: list[int]) -> dict:
+    """
+    Same win-rate breakdown, but split by trending vs choppy market regime -
+    a detector that only "works" in a trending bull market isn't the same
+    as one that holds up regardless of regime.
+    """
+    groups = defaultdict(list)
+    for r in rows:
+        if r["regime"] == "unknown":
+            continue
+        groups[(r["detector"], r["direction"], r["regime"])].append(r)
+        groups[("ALL", r["direction"], r["regime"])].append(r)
+    return _summarize_groups(groups, horizons)
+
+
+def print_summary(summary: dict, horizons: list[int], title: str = ""):
+    hdr = f"{'detector/direction':<38}{'n':>6}"
     for h in horizons:
         hdr += f"{f'win@{h}':>9}{f'avg%@{h}':>9}"
-    print("\n" + hdr)
+    print(f"\n{title}" if title else "")
+    print(hdr)
     print("-" * len(hdr))
     for key, e in summary.items():
-        line = f"{key:<28}{e['signals']:>6}"
+        line = f"{key:<38}{e['signals']:>6}"
         for h in horizons:
             line += f"{e[f'h{h}']['win_rate']:>9.1%}{e[f'h{h}']['avg_ret_pct']:>9.2f}"
         print(line)
-    print("\nwin = price moved in the signal's direction after N candles.")
-    print("Bull-market data flatters bullish detectors - compare ALL/bullish as the baseline.")
 
 
 def main():
@@ -111,6 +155,10 @@ def main():
     ap.add_argument("--horizons", default="5,10,20")
     ap.add_argument("--limit", type=int, default=1000, help="candles per pair/tf (max 1000)")
     ap.add_argument("--synthetic", action="store_true", help="offline self-test, no network")
+    ap.add_argument("--all-pairs", action="store_true",
+                    help="backtest every USDT perpetual instead of just settings.yaml's pairs")
+    ap.add_argument("--regime-split", action="store_true",
+                    help="also print a trending-vs-choppy breakdown per detector")
     args = ap.parse_args()
 
     cfg = load_config()
@@ -121,8 +169,9 @@ def main():
         for seed in range(3):
             rows += backtest_df(synthetic_df(seed=seed), cfg, horizons, f"synthetic{seed}")
     else:
-        pairs = args.pairs.split(",") if args.pairs else cfg["pairs"]
+        pairs = get_all_usdt_pairs() if args.all_pairs else (args.pairs.split(",") if args.pairs else cfg["pairs"])
         tfs = args.timeframes.split(",") if args.timeframes else cfg["timeframes"]
+        print(f"Backtesting {len(pairs)} pair(s) x {len(tfs)} timeframe(s)...")
         for sym in pairs:
             for tf in tfs:
                 df = get_klines(sym, tf, args.limit)
@@ -138,9 +187,15 @@ def main():
         return
     summary = summarize(rows, horizons)
     print_summary(summary, horizons)
+
+    output = {"horizons": horizons, "n_signals": len(rows), "summary": summary}
+    if args.regime_split:
+        regime_summary = summarize_by_regime(rows, horizons)
+        print_summary(regime_summary, horizons, title="=== Trending vs choppy regime split ===")
+        output["summary_by_regime"] = regime_summary
+
     out = Path(__file__).parent / "backtest_results.json"
-    out.write_text(json.dumps({"horizons": horizons, "n_signals": len(rows),
-                               "summary": summary}, indent=2))
+    out.write_text(json.dumps(output, indent=2))
     print(f"\nDetail written to {out}")
 
 
