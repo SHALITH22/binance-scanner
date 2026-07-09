@@ -105,7 +105,7 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict) -> d
                 "bias": bias,
                 "strength": strength,
                 "signals": signals,
-                "risk": setup_risk_plan(signals, bias, close),
+                "risk": setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0)),
             }
         time.sleep(0.15)  # be polite to the API
     return result

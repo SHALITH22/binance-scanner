@@ -107,6 +107,12 @@ risk:
   # ATR scales with candle size - on 1w/1M timeframes a fixed multiplier can
   # put the stop 30-40% away, which isn't a usable plan. Cap it (percent of price).
   max_stop_pct: 8.0
+  # A structural pattern's stop and target come from independent geometry
+  # (e.g. a flag's stop is the whole consolidation, its target is just the
+  # pole height) - nothing guarantees a favorable ratio. Reject any risk
+  # plan whose reward:risk falls below this rather than showing a setup
+  # that risks more than it could gain.
+  min_risk_reward: 1.0
 
 # --- Live signal journal ---
 # Logs every setup meeting min_confluence to journal.jsonl, then

@@ -43,20 +43,36 @@ def attach_atr_risk(signals: list[dict], close: float, atr: float, atr_mult: flo
     return signals
 
 
-def setup_risk_plan(signals: list[dict], bias: str, close: float) -> dict | None:
+def setup_risk_plan(signals: list[dict], bias: str, close: float,
+                    min_risk_reward: float = 1.0) -> dict | None:
     """
     Pick one consolidated entry/stop/target for the setup: prefer a
     structural (pattern-based) level over a generic ATR one, since it's
-    tied to actual chart geometry rather than a fixed multiple. Among
-    structural signals, prefer the one with the tightest (most disciplined)
-    stop distance.
+    tied to actual chart geometry rather than a fixed multiple.
+
+    Structural stop/target come from independent pieces of geometry though
+    (e.g. a flag's stop is the whole consolidation range, its target is
+    just the pole height) - nothing guarantees those two distances produce
+    a favorable ratio. A candidate is only used if its reward:risk clears
+    min_risk_reward; if nothing does, this returns None rather than
+    presenting a plan that risks more than it can gain. Among qualifying
+    candidates, prefer the tightest (most disciplined) stop distance.
     """
     candidates = [s for s in signals
                   if s["direction"] == bias and "stop" in s and "target" in s]
     if not candidates:
         return None
-    structural = [s for s in candidates if s["name"] in STRUCTURAL_NAMES]
-    pool = structural or candidates
+
+    def rr(s):
+        risk = abs(close - s["stop"])
+        return abs(s["target"] - close) / risk if risk > 0 else 0
+
+    qualifying = [s for s in candidates if rr(s) >= min_risk_reward]
+    if not qualifying:
+        return None  # every candidate here risks more than it could gain - not a plan worth acting on
+
+    structural = [s for s in qualifying if s["name"] in STRUCTURAL_NAMES]
+    pool = structural or qualifying
     pick = min(pool, key=lambda s: abs(close - s["stop"]))
 
     stop, target = pick["stop"], pick["target"]
