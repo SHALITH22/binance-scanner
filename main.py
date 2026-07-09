@@ -16,7 +16,7 @@ from pathlib import Path
 
 import yaml
 
-from scanner.data import get_klines, get_all_usdt_pairs, get_top_pairs_by_volume
+from scanner.data import get_klines, get_all_usdt_pairs, get_top_pairs_by_volume, get_current_price
 from scanner.indicators import enrich
 from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
@@ -83,6 +83,11 @@ def confluence_score(signals: list[dict], weights: dict | None = None) -> tuple[
 
 def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict) -> dict:
     result = {"symbol": symbol, "timeframes": {}}
+    # One live-price call shared across all timeframes for this symbol - the
+    # closed candle's close can be up to a full candle-period stale (up to
+    # 24h on 1d), so alerts quote this instead for entry/display, while
+    # detection still correctly uses only closed candles (no lookahead).
+    live_price = get_current_price(symbol)
     for tf in timeframes:
         df = get_klines(symbol, tf, cfg["candle_limit"])
         if df is None or len(df) < 60:
@@ -92,7 +97,7 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict) -> d
         df = enrich(df, cfg)
         signals = run_all_detectors(df, cfg)
         if signals:
-            close = float(df["close"].iloc[-1])
+            close = live_price if live_price is not None else float(df["close"].iloc[-1])
             atr = float(df["atr"].iloc[-1])
             risk_cfg = cfg.get("risk", {})
             signals = attach_atr_risk(signals, close, atr,

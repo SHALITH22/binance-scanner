@@ -95,6 +95,24 @@ def get_top_pairs_by_volume(n: int = 100, futures: bool = True) -> list[str]:
     return [t["symbol"] for t in rows[:n]]
 
 
+def get_current_price(symbol: str, futures: bool = True) -> float | None:
+    """
+    Live current price - separate from get_klines, which always drops the
+    still-forming candle (correct for pattern detection, but its "close"
+    can be up to a full candle-period stale - up to 24h on a 1d timeframe).
+    Alerts should quote this for the entry/display price, not the closed
+    candle's close, so the number shown actually matches the market.
+    """
+    for url in _endpoint_chain(futures, "ticker/price"):
+        resp = requests.get(url, params={"symbol": symbol}, timeout=10)
+        if resp.status_code == 451:
+            continue
+        if not resp.ok:
+            return None
+        return float(resp.json()["price"])
+    return None
+
+
 def get_klines(symbol: str, interval: str, limit: int = 300,
                futures: bool = True, max_retries: int = 3) -> pd.DataFrame | None:
     """
