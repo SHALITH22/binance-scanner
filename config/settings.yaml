@@ -1,0 +1,126 @@
+# ============================================
+# Binance Multi-Timeframe Pattern Scanner Config
+# Edit this file to change behavior - no code changes needed
+# ============================================
+
+# Pairs to scan. Start small, expand later.
+# Set scan_all: true to fetch ALL USDT perpetual pairs (slower, rate-limited)
+scan_all: false
+pairs:
+  - BTCUSDT
+  - ETHUSDT
+  - SOLUSDT
+  - BNBUSDT
+  # - FOLKSUSDT   # NOT a valid Binance pair (verified 2026-07-09) - did you mean FLOKIUSDT?
+
+# Timeframes to analyze (Binance kline intervals)
+timeframes:
+  - 15m
+  - 1h
+  - 2h
+  - 4h
+  - 8h
+  - 1d
+  - 1w
+  - 1M
+
+# How many candles to fetch per timeframe (max 1000)
+candle_limit: 300
+
+# --- Indicator settings ---
+indicators:
+  ema_periods: [20, 50, 200]
+  stochrsi:
+    rsi_length: 14
+    stoch_length: 14
+    k: 3
+    d: 3
+  volume_ma_period: 20
+
+# --- Signal thresholds ---
+signals:
+  stochrsi_oversold: 20
+  stochrsi_overbought: 80
+  # Only fire StochRSI signal when %K is already reversing out of the extreme
+  # (fewer but higher-quality signals). Set false for the old behavior.
+  stochrsi_require_turn: true
+  # Volume spike = current volume vs volume MA
+  volume_spike_multiplier: 2.0
+  # Support/resistance touch tolerance (percent)
+  sr_tolerance_pct: 0.5
+  # Minimum touches to consider a level valid
+  sr_min_touches: 3
+  # How many trailing candles the pivot/pattern detectors look across
+  # (double top/bottom, head & shoulders, triangles, wedges)
+  pattern_lookback: 150
+  # How close two peaks/troughs must be (percent) to count as "equal" for
+  # double top/bottom and head & shoulders shoulder-matching
+  pattern_tolerance_pct: 1.5
+  # Minimum head-to-neckline depth (percent) for head & shoulders / inverse -
+  # rejects shallow, noise-level "shoulders" that technically match but aren't real
+  hs_min_depth_pct: 1.0
+  # --- Flag/pennant continuation pattern ---
+  flag_pole_window: 10       # candles used to measure the "pole" move
+  flag_window: 8             # candles used to measure the consolidation after the pole
+  flag_min_pole_pct: 5.0     # minimum pole move (percent) to qualify as a real pole
+  flag_max_range_ratio: 0.5  # consolidation range must be <= this fraction of the pole's range
+  # --- Candlestick patterns ---
+  candle_trend_lookback: 5   # candles back used to confirm prior trend for hammer/shooting star
+  # --- RSI divergence ---
+  divergence_min_price_pct: 0.5  # min price swing size (percent) between the two pivots compared
+  divergence_min_rsi_diff: 3.0   # min RSI difference (points) between the two pivots to count as real divergence
+  divergence_require_extreme: true  # only count divergence at an oversold/overbought RSI extreme (textbook usage)
+  rsi_oversold: 30
+  rsi_overbought: 70
+
+# --- Weighted confluence ---
+# Weights each detector's contribution to `strength` by its backtested edge
+# over the direction baseline (from backtest_results.json), instead of
+# counting every signal equally - e.g. ascending_triangle (real edge) counts
+# for more than engulfing (no edge) or rsi_divergence (below baseline).
+confluence:
+  use_backtest_weights: true
+  min_signals: 30       # backtested sample size needed before a detector's weight is trusted
+  horizon: h10           # which backtest horizon (h5/h10/h20) the weight is computed from
+  weight_scale: 5.0       # how strongly win-rate edge translates into weight
+  weight_clamp: [0.2, 2.5]
+
+# --- Risk management ---
+# Chart patterns (double top/bottom, H&S, triangle/wedge, flag/pennant)
+# compute stop/target from their own geometry (invalidation level / measured
+# move). Everything else falls back to these ATR-based levels.
+risk:
+  atr_multiplier: 1.5      # stop distance for non-structural signals, in ATR units
+  reward_risk_ratio: 2.0   # target distance = stop distance * this ratio
+  # ATR scales with candle size - on 1w/1M timeframes a fixed multiplier can
+  # put the stop 30-40% away, which isn't a usable plan. Cap it (percent of price).
+  max_stop_pct: 8.0
+
+# --- Live signal journal ---
+# Logs every setup meeting min_confluence to journal.jsonl, then
+# journal_check.py resolves outcomes against real price - a forward-tested
+# track record, not just a retrospective backtest.
+journal:
+  enabled: true
+  horizon_candles: 20  # if neither stop nor target is hit within this many candles, mark "expired"
+
+# --- Output ---
+output:
+  # console, json, or both
+  mode: both
+  json_path: signals_output.json
+  # Only report setups with at least this many confluent signals
+  min_confluence: 2
+
+# --- Multi-timeframe confluence ---
+mtf:
+  # If true, the console only shows setups whose higher timeframes do not
+  # conflict (JSON output keeps everything, annotated with htf_agrees/htf_note)
+  require_agreement: true
+
+# --- Notifications ---
+notify:
+  telegram:
+    enabled: true           # set true after filling .env (see .env.example)
+    min_strength: 3         # only alert on setups at least this strong
+    only_htf_agreeing: true # skip setups whose higher timeframes conflict

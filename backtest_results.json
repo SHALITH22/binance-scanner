@@ -1,0 +1,445 @@
+{
+  "horizons": [
+    5,
+    10,
+    20
+  ],
+  "n_signals": 26952,
+  "summary": {
+    "ALL/bearish": {
+      "signals": 15438,
+      "h5": {
+        "win_rate": 0.482,
+        "avg_ret_pct": -0.011
+      },
+      "h10": {
+        "win_rate": 0.476,
+        "avg_ret_pct": -0.053
+      },
+      "h20": {
+        "win_rate": 0.484,
+        "avg_ret_pct": -0.24
+      }
+    },
+    "ALL/bullish": {
+      "signals": 11514,
+      "h5": {
+        "win_rate": 0.488,
+        "avg_ret_pct": -0.005
+      },
+      "h10": {
+        "win_rate": 0.499,
+        "avg_ret_pct": -0.028
+      },
+      "h20": {
+        "win_rate": 0.502,
+        "avg_ret_pct": -0.02
+      }
+    },
+    "ascending_triangle/bullish": {
+      "signals": 429,
+      "h5": {
+        "win_rate": 0.594,
+        "avg_ret_pct": 0.531
+      },
+      "h10": {
+        "win_rate": 0.611,
+        "avg_ret_pct": 0.625
+      },
+      "h20": {
+        "win_rate": 0.573,
+        "avg_ret_pct": 0.462
+      }
+    },
+    "bear_flag/bearish": {
+      "signals": 39,
+      "h5": {
+        "win_rate": 0.667,
+        "avg_ret_pct": -2.313
+      },
+      "h10": {
+        "win_rate": 0.744,
+        "avg_ret_pct": -3.696
+      },
+      "h20": {
+        "win_rate": 0.59,
+        "avg_ret_pct": -5.304
+      }
+    },
+    "bear_pennant/bearish": {
+      "signals": 3,
+      "h5": {
+        "win_rate": 0.0,
+        "avg_ret_pct": 5.483
+      },
+      "h10": {
+        "win_rate": 0.0,
+        "avg_ret_pct": 6.703
+      },
+      "h20": {
+        "win_rate": 0.667,
+        "avg_ret_pct": -4.774
+      }
+    },
+    "bull_flag/bullish": {
+      "signals": 28,
+      "h5": {
+        "win_rate": 0.536,
+        "avg_ret_pct": -0.386
+      },
+      "h10": {
+        "win_rate": 0.5,
+        "avg_ret_pct": 0.447
+      },
+      "h20": {
+        "win_rate": 0.571,
+        "avg_ret_pct": 1.063
+      }
+    },
+    "bull_pennant/bullish": {
+      "signals": 9,
+      "h5": {
+        "win_rate": 0.333,
+        "avg_ret_pct": -2.603
+      },
+      "h10": {
+        "win_rate": 0.556,
+        "avg_ret_pct": -1.927
+      },
+      "h20": {
+        "win_rate": 0.333,
+        "avg_ret_pct": -3.328
+      }
+    },
+    "descending_triangle/bearish": {
+      "signals": 233,
+      "h5": {
+        "win_rate": 0.571,
+        "avg_ret_pct": -0.352
+      },
+      "h10": {
+        "win_rate": 0.549,
+        "avg_ret_pct": -0.585
+      },
+      "h20": {
+        "win_rate": 0.476,
+        "avg_ret_pct": -0.323
+      }
+    },
+    "double_bottom/bullish": {
+      "signals": 193,
+      "h5": {
+        "win_rate": 0.446,
+        "avg_ret_pct": 0.041
+      },
+      "h10": {
+        "win_rate": 0.42,
+        "avg_ret_pct": -0.057
+      },
+      "h20": {
+        "win_rate": 0.523,
+        "avg_ret_pct": 0.475
+      }
+    },
+    "double_top/bearish": {
+      "signals": 189,
+      "h5": {
+        "win_rate": 0.513,
+        "avg_ret_pct": -0.679
+      },
+      "h10": {
+        "win_rate": 0.534,
+        "avg_ret_pct": -0.667
+      },
+      "h20": {
+        "win_rate": 0.571,
+        "avg_ret_pct": -0.964
+      }
+    },
+    "ema_cross/bearish": {
+      "signals": 183,
+      "h5": {
+        "win_rate": 0.492,
+        "avg_ret_pct": 0.058
+      },
+      "h10": {
+        "win_rate": 0.486,
+        "avg_ret_pct": 0.196
+      },
+      "h20": {
+        "win_rate": 0.546,
+        "avg_ret_pct": -0.152
+      }
+    },
+    "ema_cross/bullish": {
+      "signals": 182,
+      "h5": {
+        "win_rate": 0.456,
+        "avg_ret_pct": -0.296
+      },
+      "h10": {
+        "win_rate": 0.511,
+        "avg_ret_pct": 0.204
+      },
+      "h20": {
+        "win_rate": 0.555,
+        "avg_ret_pct": -0.148
+      }
+    },
+    "ema_stack/bearish": {
+      "signals": 5061,
+      "h5": {
+        "win_rate": 0.47,
+        "avg_ret_pct": -0.144
+      },
+      "h10": {
+        "win_rate": 0.473,
+        "avg_ret_pct": -0.36
+      },
+      "h20": {
+        "win_rate": 0.48,
+        "avg_ret_pct": -0.589
+      }
+    },
+    "ema_stack/bullish": {
+      "signals": 3943,
+      "h5": {
+        "win_rate": 0.474,
+        "avg_ret_pct": 0.104
+      },
+      "h10": {
+        "win_rate": 0.482,
+        "avg_ret_pct": 0.058
+      },
+      "h20": {
+        "win_rate": 0.495,
+        "avg_ret_pct": 0.055
+      }
+    },
+    "engulfing/bearish": {
+      "signals": 1822,
+      "h5": {
+        "win_rate": 0.479,
+        "avg_ret_pct": -0.067
+      },
+      "h10": {
+        "win_rate": 0.474,
+        "avg_ret_pct": 0.05
+      },
+      "h20": {
+        "win_rate": 0.488,
+        "avg_ret_pct": -0.029
+      }
+    },
+    "engulfing/bullish": {
+      "signals": 1654,
+      "h5": {
+        "win_rate": 0.487,
+        "avg_ret_pct": -0.174
+      },
+      "h10": {
+        "win_rate": 0.494,
+        "avg_ret_pct": 0.005
+      },
+      "h20": {
+        "win_rate": 0.497,
+        "avg_ret_pct": 0.008
+      }
+    },
+    "hammer/bullish": {
+      "signals": 267,
+      "h5": {
+        "win_rate": 0.419,
+        "avg_ret_pct": -0.744
+      },
+      "h10": {
+        "win_rate": 0.476,
+        "avg_ret_pct": -0.675
+      },
+      "h20": {
+        "win_rate": 0.513,
+        "avg_ret_pct": -0.383
+      }
+    },
+    "head_and_shoulders/bearish": {
+      "signals": 33,
+      "h5": {
+        "win_rate": 0.394,
+        "avg_ret_pct": 0.78
+      },
+      "h10": {
+        "win_rate": 0.303,
+        "avg_ret_pct": 1.245
+      },
+      "h20": {
+        "win_rate": 0.333,
+        "avg_ret_pct": 2.013
+      }
+    },
+    "inverse_head_and_shoulders/bullish": {
+      "signals": 35,
+      "h5": {
+        "win_rate": 0.4,
+        "avg_ret_pct": -0.051
+      },
+      "h10": {
+        "win_rate": 0.543,
+        "avg_ret_pct": 1.239
+      },
+      "h20": {
+        "win_rate": 0.6,
+        "avg_ret_pct": 2.055
+      }
+    },
+    "rising_wedge/bearish": {
+      "signals": 2941,
+      "h5": {
+        "win_rate": 0.502,
+        "avg_ret_pct": 0.131
+      },
+      "h10": {
+        "win_rate": 0.481,
+        "avg_ret_pct": -0.038
+      },
+      "h20": {
+        "win_rate": 0.492,
+        "avg_ret_pct": -0.155
+      }
+    },
+    "rsi_divergence/bearish": {
+      "signals": 147,
+      "h5": {
+        "win_rate": 0.442,
+        "avg_ret_pct": 2.646
+      },
+      "h10": {
+        "win_rate": 0.422,
+        "avg_ret_pct": 5.43
+      },
+      "h20": {
+        "win_rate": 0.395,
+        "avg_ret_pct": 6.184
+      }
+    },
+    "rsi_divergence/bullish": {
+      "signals": 204,
+      "h5": {
+        "win_rate": 0.466,
+        "avg_ret_pct": -0.628
+      },
+      "h10": {
+        "win_rate": 0.5,
+        "avg_ret_pct": -0.466
+      },
+      "h20": {
+        "win_rate": 0.466,
+        "avg_ret_pct": -1.155
+      }
+    },
+    "shooting_star/bearish": {
+      "signals": 207,
+      "h5": {
+        "win_rate": 0.483,
+        "avg_ret_pct": 0.026
+      },
+      "h10": {
+        "win_rate": 0.454,
+        "avg_ret_pct": 0.464
+      },
+      "h20": {
+        "win_rate": 0.488,
+        "avg_ret_pct": 0.297
+      }
+    },
+    "sr_break/bearish": {
+      "signals": 2113,
+      "h5": {
+        "win_rate": 0.457,
+        "avg_ret_pct": 0.045
+      },
+      "h10": {
+        "win_rate": 0.462,
+        "avg_ret_pct": 0.068
+      },
+      "h20": {
+        "win_rate": 0.475,
+        "avg_ret_pct": -0.109
+      }
+    },
+    "sr_break/bullish": {
+      "signals": 2106,
+      "h5": {
+        "win_rate": 0.519,
+        "avg_ret_pct": 0.078
+      },
+      "h10": {
+        "win_rate": 0.528,
+        "avg_ret_pct": 0.057
+      },
+      "h20": {
+        "win_rate": 0.526,
+        "avg_ret_pct": 0.005
+      }
+    },
+    "stochrsi/bearish": {
+      "signals": 1770,
+      "h5": {
+        "win_rate": 0.511,
+        "avg_ret_pct": 0.012
+      },
+      "h10": {
+        "win_rate": 0.489,
+        "avg_ret_pct": 0.215
+      },
+      "h20": {
+        "win_rate": 0.467,
+        "avg_ret_pct": 0.092
+      }
+    },
+    "stochrsi/bullish": {
+      "signals": 1748,
+      "h5": {
+        "win_rate": 0.495,
+        "avg_ret_pct": -0.118
+      },
+      "h10": {
+        "win_rate": 0.505,
+        "avg_ret_pct": -0.354
+      },
+      "h20": {
+        "win_rate": 0.473,
+        "avg_ret_pct": -0.233
+      }
+    },
+    "volume_spike/bearish": {
+      "signals": 697,
+      "h5": {
+        "win_rate": 0.448,
+        "avg_ret_pct": 0.04
+      },
+      "h10": {
+        "win_rate": 0.458,
+        "avg_ret_pct": -0.129
+      },
+      "h20": {
+        "win_rate": 0.519,
+        "avg_ret_pct": -0.975
+      }
+    },
+    "volume_spike/bullish": {
+      "signals": 716,
+      "h5": {
+        "win_rate": 0.451,
+        "avg_ret_pct": 0.058
+      },
+      "h10": {
+        "win_rate": 0.459,
+        "avg_ret_pct": -0.159
+      },
+      "h20": {
+        "win_rate": 0.494,
+        "avg_ret_pct": -0.079
+      }
+    }
+  }
+}
