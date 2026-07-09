@@ -2,9 +2,9 @@ name: Scan
 
 on:
   schedule:
-    # Offset from :00 - GitHub's own docs warn that exactly-on-the-hour
+    # Offset from :00/:30 - GitHub's own docs warn that on-the-hour/half-hour
     # schedules hit peak load and are frequently delayed or dropped.
-    - cron: "13 * * * *"  # every hour at :13, UTC
+    - cron: "13,43 * * * *"  # every 30 minutes, at :13 and :43, UTC
   workflow_dispatch: {}   # allows manual "Run workflow" from the Actions tab
 
 permissions:
