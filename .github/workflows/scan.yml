@@ -2,7 +2,9 @@ name: Scan
 
 on:
   schedule:
-    - cron: "0 * * * *"  # every hour, UTC
+    # Offset from :00 - GitHub's own docs warn that exactly-on-the-hour
+    # schedules hit peak load and are frequently delayed or dropped.
+    - cron: "13 * * * *"  # every hour at :13, UTC
   workflow_dispatch: {}   # allows manual "Run workflow" from the Actions tab
 
 permissions:

@@ -2,7 +2,9 @@ name: Backtest
 
 on:
   schedule:
-    - cron: "0 0 * * 0"  # weekly, Sunday 00:00 UTC - keeps detector weights current
+    # Offset from :00 - GitHub's own docs warn that exactly-on-the-hour
+    # schedules hit peak load and are frequently delayed or dropped.
+    - cron: "23 2 * * 0"  # weekly, Sunday 02:23 UTC - keeps detector weights current
   workflow_dispatch: {}
 
 permissions:
