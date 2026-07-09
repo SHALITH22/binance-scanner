@@ -1,92 +1,117 @@
 # Binance Multi-Timeframe Pattern Scanner
 
-Scans Binance pairs across 15m → 1M timeframes, detects technical setups
-(EMA structure, S/R breaks, StochRSI extremes, volume spikes, triangle
-compression), scores confluence, and outputs console + JSON reports.
+Scans Binance pairs across 15m → 1M timeframes for technical setups, scores
+confluence weighted by each detector's own backtested edge, attaches a
+stop/target risk plan, sends Telegram alerts, and logs every alert to a
+forward-tested journal. Runs automatically in the cloud via GitHub Actions —
+no server or always-on PC required.
 
 **This is a SIGNAL/ALERT system, not a trading bot.** No orders are placed.
-No API keys are needed for this phase — Binance public market data is free.
+No API keys are needed for market data — Binance public data is free.
+Only Telegram credentials (for alerts) are required, and those are never
+hardcoded (see "Secrets" below).
 
 ---
 
-## Phase 1: Run on your PC
+## What it detects
+
+- **Trend/momentum:** EMA stack & cross, StochRSI extremes, volume spikes
+- **Support/resistance:** level clustering, breaks, tests
+- **Chart patterns:** double top/bottom, head & shoulders (+ inverse),
+  ascending/descending/symmetrical triangles, rising/falling wedges,
+  bull/bear flags & pennants
+- **Candlesticks:** engulfing, hammer, shooting star
+- **Momentum divergence:** RSI divergence at oversold/overbought extremes
+
+Every detector's historical win rate is measured in `backtest.py` and used
+to weight its contribution to a setup's `strength` score — a pattern with
+real backtested edge (e.g. ascending triangles) counts for more than one
+with none (e.g. plain engulfing candles).
+
+## Risk plan
+
+Chart patterns compute stop/target from their own geometry (pattern height
+projected past the breakout, invalidation above/below the pattern extreme).
+Everything else falls back to an ATR-based stop, capped at `max_stop_pct`
+of price so high-timeframe candles (1w/1M) don't produce absurdly wide
+stops.
+
+## Live journal
+
+Every setup that clears `min_confluence` gets logged to `journal.jsonl`.
+`journal_check.py` later checks real price action to see whether stop or
+target was hit first, building an actual forward-tested track record —
+not just a retrospective backtest.
+
+---
+
+## Running locally
 
 ```bash
-# 1. Clone (after you push this to GitHub) or copy the folder
-cd binance-scanner
-
-# 2. Create a virtual environment
-python -m venv venv
-venv\Scripts\activate        # Windows
-# source venv/bin/activate   # Linux/Mac
-
-# 3. Install dependencies
 pip install -r requirements.txt
-
-# 4. Run
-python main.py
+python main.py            # one scan, prints + writes signals_output.json
+python backtest.py        # measure detector win rates -> backtest_results.json
+python journal_check.py   # resolve open journal entries against real price
+python smoke_test.py      # offline sanity check, no network needed
 ```
 
-Edit `config/settings.yaml` to change pairs, timeframes, and thresholds.
-Set `scan_all: true` to scan every USDT perpetual pair (takes much longer).
+Edit `config/settings.yaml` to change pairs, timeframes, and every
+threshold mentioned above. Set `scan_all: true` to scan every USDT
+perpetual instead of just the configured `pairs` list.
 
----
+## Running in the cloud (GitHub Actions)
 
-## Phase 1b: Working on this with Claude Code
+Two scheduled workflows in `.github/workflows/`:
 
-1. Push this folder to a GitHub repo:
-   ```bash
-   git init && git add . && git commit -m "initial scanner"
-   git remote add origin https://github.com/<you>/binance-scanner.git
-   git push -u origin main
-   ```
-2. Open Claude Code in the project folder (`claude` in the terminal).
-3. Useful first prompts for Claude Code:
-   - "Run main.py and fix any errors"
-   - "Add a backtest module that replays historical klines through
-     patterns.py and logs whether each signal was profitable after N candles"
-   - "Add a Telegram notifier that sends any setup with strength >= 3"
-   - "Add multi-timeframe confluence: only report a 1h signal if the 4h
-     and 1d bias agree"
+- **`scan.yml`** — runs `main.py` + `journal_check.py` every 30 minutes,
+  commits `journal.jsonl` back to the repo so history persists across runs.
+- **`backtest.yml`** — runs `backtest.py` weekly, commits a refreshed
+  `backtest_results.json` so detector weights stay current.
 
-### Key handling rule (tell Claude Code this)
-> Never hardcode keys. When a feature needs a key (Telegram bot token,
-> Binance API key, Claude/Gemini API key), stop and ask me for it, then
-> read it from a `.env` file that is in `.gitignore`.
+Both can also be triggered manually from the repo's **Actions** tab via
+**Run workflow**.
 
-Keys you will need LATER (not now):
-| Phase | Key | Purpose |
-|---|---|---|
-| Notifications | Telegram bot token | Push alerts to your phone |
-| AI synthesis | Claude or Gemini API key | Turn JSON signals into readable analysis |
-| Account data | Binance API key (READ-ONLY) | Balances, positions |
-| Execution (much later) | Binance API key (trade-enabled) | Only after months of proven alerts |
+### Secrets
 
----
+Set these in the repo's **Settings → Secrets and variables → Actions**:
 
-## Phase 2: Cloud (GCP)
+| Secret | Value |
+|---|---|
+| `TELEGRAM_BOT_TOKEN` | from [@BotFather](https://t.me/BotFather) |
+| `TELEGRAM_CHAT_ID` | your numeric Telegram chat ID |
 
-- Containerize with a simple Dockerfile
-- Deploy to Cloud Run
-- Trigger with Cloud Scheduler at candle closes (e.g. every 4h)
-- Store signal history in Firestore → this becomes your hit-rate tracker
-- Keys go in Secret Manager, never in the repo
-
-## Phase 3: Feedback loop
-
-- Log every signal + what price did 5/10/20 candles later
-- After a few hundred signals you'll know which detectors have edge
-  and which are noise — tune settings.yaml from DATA, not feelings
+Locally, put the same two keys in a `.env` file (see `.env.example`) —
+`scanner/notify.py` checks environment variables first (for CI), then
+falls back to `.env` (for local runs). `.env` is gitignored; never commit it.
 
 ---
 
 ## Architecture
 
 ```
-main.py                 orchestrator
-config/settings.yaml    all tunable behavior
-scanner/data.py         Binance REST fetching (public, no key)
-scanner/indicators.py   EMA, RSI, StochRSI, ATR, volume MA (pure pandas)
-scanner/patterns.py     detectors + S/R level finder + confluence
-signals_output.json     machine-readable output for AI/notifier layers
+main.py                  orchestrator: scan -> weight -> risk -> notify -> journal
+backtest.py               replays history through detectors, measures win rates
+journal_check.py          resolves open journal entries against real price
+config/settings.yaml      every tunable threshold
+scanner/data.py           Binance REST fetching (public, no key)
+scanner/indicators.py     EMA, RSI, StochRSI, ATR, volume MA (pure pandas)
+scanner/patterns.py       all detectors + pivot/S-R finder
+scanner/mtf.py            higher-timeframe agreement filter
+scanner/risk.py           stop/target calculation
+scanner/journal.py        forward-tested track record (log + resolve)
+scanner/notify.py         Telegram formatting/sending
+signals_output.json       machine-readable output of the last scan
+backtest_results.json     detector win rates, feeds the weighting in main.py
+journal.jsonl             append-only log of every real alert + its outcome
 ```
+
+## Honest notes on accuracy
+
+No technical-pattern system hits 80%+ win rates on liquid markets — if it
+did, the edge would already be arbitraged away. The best detectors here
+(ascending triangles, bear flags) backtest around 57-66%; some detectors
+(engulfing, plain hammer) show no real edge over baseline and are weighted
+down accordingly rather than removed, so they still contribute context
+without inflating `strength`. Win rate alone is also the wrong number to
+chase — a 45% win rate with 2:1 reward:risk (this system's default target)
+is profitable; the risk plan matters as much as the direction call.

@@ -71,7 +71,8 @@ def notify_report(report: dict, cfg: dict) -> int:
         return 0
     env = load_env()
     if not env.get("TELEGRAM_BOT_TOKEN"):
-        print("  [notify] telegram enabled but .env has no TELEGRAM_BOT_TOKEN - skipping")
+        print("  [notify] telegram enabled but TELEGRAM_BOT_TOKEN not found in "
+              "environment or .env - skipping")
         return 0
     min_strength = tg.get("min_strength", 3)
     only_agreeing = tg.get("only_htf_agreeing", True)

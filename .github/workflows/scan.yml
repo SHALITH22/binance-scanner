@@ -38,4 +38,5 @@ jobs:
           touch journal.jsonl
           git add journal.jsonl
           git diff --cached --quiet || git commit -m "Update journal [skip ci]"
+          git pull --rebase --autostash
           git push
