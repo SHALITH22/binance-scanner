@@ -16,7 +16,7 @@ from pathlib import Path
 
 import yaml
 
-from scanner.data import get_klines, get_all_usdt_pairs
+from scanner.data import get_klines, get_all_usdt_pairs, get_top_pairs_by_volume
 from scanner.indicators import enrich
 from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
@@ -113,7 +113,18 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict) -> d
 
 def main():
     cfg = load_config()
-    pairs = get_all_usdt_pairs() if cfg["scan_all"] else cfg["pairs"]
+    if cfg["scan_all"]:
+        pairs = get_all_usdt_pairs()
+    elif cfg.get("pairs_mode") == "top_volume":
+        # Refetched fresh on every run (not cached/daily) - which coins are
+        # liquid enough to scan shifts constantly, so this must be as
+        # current as the scan itself, not a snapshot from hours/days ago.
+        pairs = get_top_pairs_by_volume(cfg.get("top_n_pairs", 100))
+        if not pairs:
+            print("[warn] could not fetch top-volume pairs this run - falling back to static pairs list")
+            pairs = cfg["pairs"]
+    else:
+        pairs = cfg["pairs"]
     timeframes = cfg["timeframes"]
     min_conf = cfg["output"]["min_confluence"]
     weights = load_detector_weights(cfg)

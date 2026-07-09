@@ -3,9 +3,20 @@
 # Edit this file to change behavior - no code changes needed
 # ============================================
 
-# Pairs to scan. Start small, expand later.
-# Set scan_all: true to fetch ALL USDT perpetual pairs (slower, rate-limited)
+# Pairs to scan.
+# pairs_mode: top_volume  -> recomputed FRESH on every single scan run (not
+#   daily, not cached) from Binance's live 24h ticker data - the top
+#   `top_n_pairs` USDT perpetuals by real trading volume right now. This is
+#   the default: which coins are liquid enough to scan shifts constantly,
+#   so the list must be as current as the scan itself.
+# pairs_mode: static      -> always use the `pairs` list below verbatim.
+# scan_all: true           -> ignore pairs_mode entirely, fetch every USDT
+#   perpetual (~530 pairs, much slower, not recommended for 30-min cadence).
 scan_all: false
+pairs_mode: top_volume
+top_n_pairs: 30
+# Fallback only - used if a live top-volume fetch fails (e.g. Binance
+# outage) or if pairs_mode is set to "static".
 pairs:
   - BTCUSDT
   - ETHUSDT
@@ -63,6 +74,7 @@ signals:
   flag_pole_window: 10       # candles used to measure the "pole" move
   flag_window: 8             # candles used to measure the consolidation after the pole
   flag_min_pole_pct: 5.0     # minimum pole move (percent) to qualify as a real pole
+  flag_max_pole_pct: 50.0    # maximum pole move (percent) - beyond this it's a listing crash/pump, not a flagpole
   flag_max_range_ratio: 0.5  # consolidation range must be <= this fraction of the pole's range
   # --- Candlestick patterns ---
   candle_trend_lookback: 5   # candles back used to confirm prior trend for hammer/shooting star

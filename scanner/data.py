@@ -61,6 +61,40 @@ def get_all_usdt_pairs(futures: bool = True) -> list[str]:
     ]
 
 
+# Stable-to-stable pairs (e.g. USDCUSDT) aren't meaningful for pattern
+# scanning - near-zero volatility by design, not a "trade".
+STABLE_SYMBOLS = {
+    "USDT", "USDC", "DAI", "BUSD", "TUSD", "FDUSD", "USDE", "PYUSD",
+    "USDS", "USDD", "GUSD", "FRAX", "LUSD", "SUSD", "USDP", "EURT", "EURC",
+}
+
+
+def get_top_pairs_by_volume(n: int = 100, futures: bool = True) -> list[str]:
+    """
+    Top N USDT perpetuals by 24h quote volume, fetched fresh on every call -
+    which coins are liquid enough to scan genuinely shifts day to day, so
+    this is recomputed each run rather than read from a static list.
+    One request returns every symbol's volume at once, so this costs a
+    single extra API call regardless of N.
+    """
+    valid = set(get_all_usdt_pairs(futures))
+    ticker = None
+    for url in _endpoint_chain(futures, "ticker/24hr"):
+        resp = requests.get(url, timeout=15)
+        if resp.status_code == 451:
+            continue
+        resp.raise_for_status()
+        ticker = resp.json()
+        break
+    if not ticker:
+        return []
+
+    rows = [t for t in ticker if t["symbol"] in valid
+            and t["symbol"][:-4] not in STABLE_SYMBOLS]
+    rows.sort(key=lambda t: float(t["quoteVolume"]), reverse=True)
+    return [t["symbol"] for t in rows[:n]]
+
+
 def get_klines(symbol: str, interval: str, limit: int = 300,
                futures: bool = True, max_retries: int = 3) -> pd.DataFrame | None:
     """

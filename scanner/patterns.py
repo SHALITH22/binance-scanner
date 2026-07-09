@@ -333,12 +333,19 @@ def detect_inverse_head_shoulders(df: pd.DataFrame, pivot_highs: list[tuple[int,
 
 
 def detect_flag_pennant(df: pd.DataFrame, pole_window: int, flag_window: int,
-                        min_pole_pct: float, max_range_ratio: float) -> dict | None:
+                        min_pole_pct: float, max_range_ratio: float,
+                        max_pole_pct: float = 50.0) -> dict | None:
     """
     A sharp directional move (the pole) followed by a tight consolidation,
     confirmed on a breakout that continues the pole's direction. Narrower
     second-half range within the consolidation gets called a pennant
     (converging) instead of a flag (roughly parallel channel).
+
+    max_pole_pct rejects poles beyond a normal continuation move - a >50%
+    move in one pole_window is far more likely a new-listing pump/crash or
+    a data anomaly than a disciplined flagpole, and the measured-move
+    projection (pole height added past the breakout) can go non-physical
+    (negative price target) when the pole is that extreme.
     """
     total = pole_window + flag_window
     if len(df) < total + 2:
@@ -348,7 +355,7 @@ def detect_flag_pennant(df: pd.DataFrame, pole_window: int, flag_window: int,
 
     pole_start, pole_end = pole["close"].iloc[0], pole["close"].iloc[-1]
     pole_pct = (pole_end - pole_start) / pole_start * 100
-    if abs(pole_pct) < min_pole_pct:
+    if abs(pole_pct) < min_pole_pct or abs(pole_pct) > max_pole_pct:
         return None
     pole_range = pole["high"].max() - pole["low"].min()
     flag_range = flag["high"].max() - flag["low"].min()
@@ -369,9 +376,12 @@ def detect_flag_pennant(df: pd.DataFrame, pole_window: int, flag_window: int,
                 "detail": f"Bull {shape}: {pole_pct:.1f}% pole, broke consolidation high {flag_high:.4g}",
                 "stop": flag_low, "target": flag_high + pole_height}
     if pole_pct < 0 and prev_close >= flag_low and close < flag_low:
+        target = flag_low - pole_height
+        if target <= 0:
+            return None  # measured move would put the target at/below zero - not physical
         return {"name": f"bear_{shape}", "direction": "bearish",
                 "detail": f"Bear {shape}: {pole_pct:.1f}% pole, broke consolidation low {flag_low:.4g}",
-                "stop": flag_high, "target": flag_low - pole_height}
+                "stop": flag_high, "target": target}
     return None
 
 
@@ -471,6 +481,7 @@ def run_all_detectors(df: pd.DataFrame, cfg: dict) -> list[dict]:
     flag_pole_window = sig_cfg.get("flag_pole_window", 10)
     flag_window = sig_cfg.get("flag_window", 8)
     flag_min_pole_pct = sig_cfg.get("flag_min_pole_pct", 5.0)
+    flag_max_pole_pct = sig_cfg.get("flag_max_pole_pct", 50.0)
     flag_max_range_ratio = sig_cfg.get("flag_max_range_ratio", 0.5)
     candle_trend_lookback = sig_cfg.get("candle_trend_lookback", 5)
     div_min_price_pct = sig_cfg.get("divergence_min_price_pct", 0.5)
@@ -495,7 +506,8 @@ def run_all_detectors(df: pd.DataFrame, cfg: dict) -> list[dict]:
         detect_double_bottom(df, pivot_highs, pivot_lows, pattern_tol),
         detect_head_shoulders(df, pivot_highs, pivot_lows, window_len, pattern_tol, hs_min_depth),
         detect_inverse_head_shoulders(df, pivot_highs, pivot_lows, window_len, pattern_tol, hs_min_depth),
-        detect_flag_pennant(df, flag_pole_window, flag_window, flag_min_pole_pct, flag_max_range_ratio),
+        detect_flag_pennant(df, flag_pole_window, flag_window, flag_min_pole_pct,
+                            flag_max_range_ratio, flag_max_pole_pct),
         detect_engulfing(df),
         detect_hammer_shooting_star(df, candle_trend_lookback),
         detect_rsi_divergence(df, pivot_highs, pivot_lows, window_len, div_min_price_pct, div_min_rsi_diff,
