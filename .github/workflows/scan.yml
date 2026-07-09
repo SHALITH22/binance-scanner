@@ -13,6 +13,7 @@ permissions:
 jobs:
   scan:
     runs-on: ubuntu-latest
+    environment: Telegram   # secrets were saved as environment secrets under this name
     steps:
       - uses: actions/checkout@v4
 
