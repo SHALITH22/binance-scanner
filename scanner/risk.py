@@ -43,29 +43,60 @@ def attach_atr_risk(signals: list[dict], close: float, atr: float, atr_mult: flo
     return signals
 
 
+def calibrate_target(entry: float, detector_name: str, direction: str,
+                     avg_returns: dict, min_move_pct: float = 0.3) -> float | None:
+    """
+    Override a geometric/ATR target with the detector's actual average
+    historical forward return (from backtest_results.json) when available -
+    grounds the target in what price has genuinely tended to do after this
+    specific setup, instead of a fixed multiple or a "measured move"
+    assumption that was never checked against real data.
+
+    avg_returns[(name, direction)] is a raw mean forward return (can be
+    negative for a bearish detector that historically worked, since price
+    fell) - entry * (1 + pct/100) is correct as-is for either direction,
+    no sign-flipping needed. Skipped if the move is too small to be a
+    meaningful target (near-zero average moves aren't a "plan").
+    """
+    avg_pct = avg_returns.get((detector_name, direction))
+    if avg_pct is None or abs(avg_pct) < min_move_pct:
+        return None
+    return entry * (1 + avg_pct / 100)
+
+
 def setup_risk_plan(signals: list[dict], bias: str, close: float,
-                    min_risk_reward: float = 1.0) -> dict | None:
+                    min_risk_reward: float = 1.0, avg_returns: dict | None = None,
+                    min_calibrated_move_pct: float = 0.3) -> dict | None:
     """
     Pick one consolidated entry/stop/target for the setup: prefer a
     structural (pattern-based) level over a generic ATR one, since it's
-    tied to actual chart geometry rather than a fixed multiple.
+    tied to actual chart geometry rather than a fixed multiple. The target
+    is then replaced with the detector's real historical average move when
+    that data is available (see calibrate_target) - the reported scenario
+    reflects what has actually happened, not just what the geometry implies.
 
     Structural stop/target come from independent pieces of geometry though
     (e.g. a flag's stop is the whole consolidation range, its target is
     just the pole height) - nothing guarantees those two distances produce
-    a favorable ratio. A candidate is only used if its reward:risk clears
-    min_risk_reward; if nothing does, this returns None rather than
-    presenting a plan that risks more than it can gain. Among qualifying
-    candidates, prefer the tightest (most disciplined) stop distance.
+    a favorable ratio. A candidate is only used if its reward:risk (using
+    the calibrated target where available) clears min_risk_reward; if
+    nothing does, this returns None rather than presenting a plan that
+    risks more than it can gain. Among qualifying candidates, prefer the
+    tightest (most disciplined) stop distance.
     """
     candidates = [s for s in signals
                   if s["direction"] == bias and "stop" in s and "target" in s]
     if not candidates:
         return None
+    avg_returns = avg_returns or {}
+
+    def effective_target(s):
+        calibrated = calibrate_target(close, s["name"], s["direction"], avg_returns, min_calibrated_move_pct)
+        return calibrated if calibrated is not None else s["target"]
 
     def rr(s):
         risk = abs(close - s["stop"])
-        return abs(s["target"] - close) / risk if risk > 0 else 0
+        return abs(effective_target(s) - close) / risk if risk > 0 else 0
 
     qualifying = [s for s in candidates if rr(s) >= min_risk_reward]
     if not qualifying:
@@ -75,7 +106,9 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
     pool = structural or qualifying
     pick = min(pool, key=lambda s: abs(close - s["stop"]))
 
-    stop, target = pick["stop"], pick["target"]
+    stop = pick["stop"]
+    target = effective_target(pick)
+    calibrated = (target != pick["target"])
     risk = abs(close - stop)
     reward = abs(target - close)
     return {
@@ -84,4 +117,5 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
         "target": round(target, 6),
         "risk_reward": round(reward / risk, 2) if risk > 0 else None,
         "based_on": pick["name"],
+        "target_basis": "historical avg move" if calibrated else "pattern/ATR estimate",
     }

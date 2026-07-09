@@ -69,6 +69,29 @@ def load_detector_weights(cfg: dict) -> dict:
     return weights
 
 
+def load_detector_avg_returns(cfg: dict) -> dict:
+    """
+    Turn backtest_results.json into a {(detector, direction): avg_ret_pct}
+    map, used to calibrate risk-plan targets against each detector's real
+    historical average move instead of a geometric/ATR guess. Same horizon
+    and min_signals threshold as the confluence weighting, for consistency.
+    """
+    conf_cfg = cfg.get("confluence", {})
+    if not BACKTEST_RESULTS_PATH.exists():
+        return {}
+    summary = json.loads(BACKTEST_RESULTS_PATH.read_text()).get("summary", {})
+    horizon = conf_cfg.get("horizon", "h10")
+    min_signals = conf_cfg.get("min_signals", 30)
+
+    avg_returns = {}
+    for key, entry in summary.items():
+        if key.startswith("ALL/") or horizon not in entry or entry["signals"] < min_signals:
+            continue
+        detector, _, direction = key.rpartition("/")
+        avg_returns[(detector, direction)] = entry[horizon]["avg_ret_pct"]
+    return avg_returns
+
+
 def confluence_score(signals: list[dict], weights: dict | None = None) -> tuple[str, float]:
     """Net directional bias and strength from a signal list, weighted by backtested edge."""
     weights = weights or {}
@@ -81,7 +104,8 @@ def confluence_score(signals: list[dict], weights: dict | None = None) -> tuple[
     return "mixed", round(max(bull, bear), 2)
 
 
-def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict) -> dict:
+def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
+             avg_returns: dict | None = None) -> dict:
     result = {"symbol": symbol, "timeframes": {}}
     # One live-price call shared across all timeframes for this symbol - the
     # closed candle's close can be up to a full candle-period stale (up to
@@ -110,7 +134,8 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict) -> d
                 "bias": bias,
                 "strength": strength,
                 "signals": signals,
-                "risk": setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0)),
+                "risk": setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
+                                        avg_returns, risk_cfg.get("min_calibrated_move_pct", 0.3)),
             }
         time.sleep(0.15)  # be polite to the API
     return result
@@ -133,6 +158,7 @@ def main():
     timeframes = cfg["timeframes"]
     min_conf = cfg["output"]["min_confluence"]
     weights = load_detector_weights(cfg)
+    avg_returns = load_detector_avg_returns(cfg)
 
     print(f"Scanning {len(pairs)} pairs x {len(timeframes)} timeframes...")
     if weights:
@@ -143,7 +169,7 @@ def main():
 
     for symbol in pairs:
         try:
-            res = scan_pair(symbol, timeframes, cfg, weights)
+            res = scan_pair(symbol, timeframes, cfg, weights, avg_returns)
         except Exception as e:
             print(f"  [error] {symbol}: {e}")
             continue
@@ -165,7 +191,8 @@ def main():
                     r = data["risk"]
                     rr = f"{r['risk_reward']}:1" if r["risk_reward"] else "n/a"
                     print(f"    risk: entry={r['entry']:.6g} stop={r['stop']:.6g} "
-                          f"target={r['target']:.6g} (R:R {rr}, based on {r['based_on']})")
+                          f"target={r['target']:.6g} (R:R {rr}, based on {r['based_on']}, "
+                          f"target: {r['target_basis']})")
                 print()
 
     report["results"].sort(key=lambda r: r["max_strength"], reverse=True)

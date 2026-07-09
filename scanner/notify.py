@@ -60,7 +60,8 @@ def format_setup(symbol: str, tf: str, data: dict) -> str:
         r = data["risk"]
         rr = f"{r['risk_reward']}:1" if r["risk_reward"] else "n/a"
         lines.append(f"Risk: entry {r['entry']:.6g} / stop {r['stop']:.6g} / "
-                     f"target {r['target']:.6g} (R:R {rr}, based on {escape(r['based_on'])})")
+                     f"target {r['target']:.6g} (R:R {rr}, based on {escape(r['based_on'])}, "
+                     f"target: {escape(r['target_basis'])})")
     return "\n".join(lines)
 
 

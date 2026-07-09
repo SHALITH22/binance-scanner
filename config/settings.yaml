@@ -113,6 +113,12 @@ risk:
   # plan whose reward:risk falls below this rather than showing a setup
   # that risks more than it could gain.
   min_risk_reward: 1.0
+  # Replace the geometric/ATR target with the detector's real historical
+  # average move (from backtest_results.json) when available, so the
+  # reported scenario reflects what price has actually tended to do -
+  # skipped if that average move is smaller than this (percent), since a
+  # near-zero empirical move isn't a meaningful target either.
+  min_calibrated_move_pct: 0.3
 
 # --- Live signal journal ---
 # Logs every setup meeting min_confluence to journal.jsonl, then
