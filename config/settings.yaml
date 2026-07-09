@@ -14,7 +14,7 @@
 #   perpetual (~530 pairs, much slower, not recommended for 30-min cadence).
 scan_all: false
 pairs_mode: top_volume
-top_n_pairs: 30
+top_n_pairs: 100
 # Fallback only - used if a live top-volume fetch fails (e.g. Binance
 # outage) or if pairs_mode is set to "static".
 pairs:
