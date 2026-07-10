@@ -23,7 +23,7 @@ from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
 from scanner.notify import notify_report
 from scanner.risk import attach_atr_risk, setup_risk_plan
-from scanner.journal import log_signals, detector_recent_form, mark_notified, detector_reliability
+from scanner.journal import log_signals, detector_recent_form, mark_notified, detector_reliability, detector_avg_return
 from scanner.regime import regime_label
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
@@ -69,29 +69,6 @@ def load_detector_weights(cfg: dict) -> dict:
         edge = entry[horizon]["win_rate"] - baseline[direction]
         weights[(detector, direction)] = max(lo, min(hi, 1.0 + scale * edge))
     return weights
-
-
-def load_detector_avg_returns(cfg: dict) -> dict:
-    """
-    Turn backtest_results.json into a {(detector, direction): avg_ret_pct}
-    map, used to calibrate risk-plan targets against each detector's real
-    historical average move instead of a geometric/ATR guess. Same horizon
-    and min_signals threshold as the confluence weighting, for consistency.
-    """
-    conf_cfg = cfg.get("confluence", {})
-    if not BACKTEST_RESULTS_PATH.exists():
-        return {}
-    summary = json.loads(BACKTEST_RESULTS_PATH.read_text()).get("summary", {})
-    horizon = conf_cfg.get("horizon", "h10")
-    min_signals = conf_cfg.get("min_signals", 30)
-
-    avg_returns = {}
-    for key, entry in summary.items():
-        if key.startswith("ALL/") or horizon not in entry or entry["signals"] < min_signals:
-            continue
-        detector, _, direction = key.rpartition("/")
-        avg_returns[(detector, direction)] = entry[horizon]["avg_ret_pct"]
-    return avg_returns
 
 
 def confluence_score(signals: list[dict], weights: dict | None = None) -> tuple[str, float]:
@@ -171,7 +148,6 @@ def main():
     timeframes = cfg["timeframes"]
     min_conf = cfg["output"]["min_confluence"]
     weights = load_detector_weights(cfg)
-    avg_returns = load_detector_avg_returns(cfg)
     risk_cfg = cfg.get("risk", {})
     # Detectors the LIVE journal has already proven lose money at the actual
     # stop/target sizing used here - a much harder, more honest bar than
@@ -182,6 +158,11 @@ def main():
     min_win_rate = risk_cfg.get("min_detector_win_rate", 0.35)
     reliability = detector_reliability(min_n)
     unreliable = {k for k, wr in reliability.items() if wr < min_win_rate}
+    # Target calibration also uses the live journal (real, stop-respecting
+    # outcome_pct), not backtest_results.json's naive forward return - same
+    # reason as the blacklist above, and same min_n gate so a target can't
+    # get calibrated off a handful of early results either.
+    avg_returns = detector_avg_return(min_n)
 
     print(f"Scanning {len(pairs)} pairs x {len(timeframes)} timeframes...")
     if weights:

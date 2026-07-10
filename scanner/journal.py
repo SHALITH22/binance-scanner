@@ -243,6 +243,30 @@ def detector_reliability(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tup
             for key, statuses in groups.items() if len(statuses) >= min_n}
 
 
+def detector_avg_return(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tuple[str, str], float]:
+    """
+    Real average % move per (detector, direction) from the full resolved
+    (win/loss/expired) live history. outcome_pct already reflects what price
+    actually did against the REAL stop/target - unlike backtest_results.json's
+    avg_ret_pct, which is a naive N-candle-later return with no stop-loss
+    involved at all (see detector_reliability's docstring for why that's a
+    materially different, easier-to-satisfy number).
+
+    This is what setup_risk_plan uses to calibrate a target - using the
+    backtest version here let a detector's target get pulled from the same
+    unrealistic metric that inflated its apparent edge, which is how a trade
+    with only 3 live decided results and a losing recent streak still ended
+    up with a calibrated (not just geometric) target. Same min_n gate as
+    detector_reliability, so a handful of early results can't calibrate
+    anything either.
+    """
+    entries = [e for e in _load(path) if e["status"] in ("win", "loss", "expired")]
+    groups: dict[tuple[str, str], list[float]] = {}
+    for e in entries:
+        groups.setdefault((e["based_on"], e["bias"]), []).append(e["outcome_pct"])
+    return {key: sum(vals) / len(vals) for key, vals in groups.items() if len(vals) >= min_n}
+
+
 def detector_recent_form(detector_name: str, direction: str, n: int = 5,
                          path: Path = JOURNAL_PATH) -> dict | None:
     """
