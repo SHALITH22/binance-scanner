@@ -172,16 +172,22 @@ risk:
   # skipped if that average move is smaller than this (percent), since a
   # near-zero empirical move isn't a meaningful target either.
   min_calibrated_move_pct: 0.3
-  # A detector/direction is refused as a trade basis once the LIVE journal
-  # shows it losing at this stop/target sizing (win rate below this, with
-  # at least min_reliable_n decided trades) - regardless of what
-  # backtest_results.json claims, since that backtest measures a much
-  # easier bar (raw N-candle forward return, no stop-loss involved) and can
-  # look like real edge while actually losing money once a realistic stop
-  # is respected. 0.35 sits below the ~0.33 breakeven win rate for a 2:1
-  # reward:risk trade, so this only blocks detectors that are clearly
-  # losing, not merely below-average.
-  min_detector_win_rate: 0.35
+  # A detector/direction is refused as a trade basis once its EXPECTANCY
+  # (win_rate * (1 + avg R:R) - 1, i.e. real profit/loss in units of risk)
+  # goes below this, using the live journal once it has min_reliable_n
+  # decided trades, falling back to realistic_backtest.py's large-scale
+  # historical simulation otherwise - both respect the actual stop/target,
+  # unlike backtest_results.json's naive N-candle forward return, which can
+  # look like edge while actually losing money once a realistic stop is
+  # respected. Expectancy (not a flat win-rate bar) matters because R:R
+  # varies hugely by detector - e.g. a structural pattern with a 15:1 R:R
+  # only needs a ~6% win rate to profit, so comparing every detector
+  # against one flat win-rate threshold would blacklist the system's best
+  # performers alongside its worst (this happened once already - a flat
+  # 0.35 win-rate bar blacklisted ascending_triangle/bullish, a detector
+  # profitable at a 29.3% win rate against its own ~6.3% breakeven).
+  # 0.0 = breakeven; only negative-expectancy detectors are blocked.
+  min_detector_expectancy: 0.0
   min_reliable_n: 10
   # Professional rule: risk a fixed small % of account equity per trade,
   # sized off the actual stop distance - never a guess, never scaled by

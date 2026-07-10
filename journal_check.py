@@ -11,7 +11,7 @@ from pathlib import Path
 
 import yaml
 
-from scanner.journal import check_open_entries, summarize, JOURNAL_PATH, get_due_reminders, mark_reminded
+from scanner.journal import check_open_entries, summarize, JOURNAL_PATH, get_due_reminders, mark_reminded, log_failed_trades
 from scanner.notify import notify_outcomes, notify_reminders
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
@@ -34,6 +34,12 @@ def main():
     sent = notify_outcomes(resolved, cfg)
     if sent:
         print(f"Sent {sent} outcome notice(s)")
+
+    # Losses/expired pulled into their own file for review - "what didn't
+    # work and why", separate from the main journal's mix of wins and losses.
+    failed = log_failed_trades(resolved)
+    if failed:
+        print(f"Logged {failed} failed trade(s) to failed_trades.jsonl for review")
 
     # Lightweight "still open" ping for setups that were actually alerted on
     # and remain open past the cooldown - not a repeat of the full alert.

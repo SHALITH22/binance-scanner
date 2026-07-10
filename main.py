@@ -23,11 +23,42 @@ from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
 from scanner.notify import notify_report
 from scanner.risk import attach_atr_risk, setup_risk_plan
-from scanner.journal import log_signals, detector_recent_form, mark_notified, detector_reliability, detector_avg_return
+from scanner.journal import log_signals, detector_recent_form, mark_notified, detector_expectancy, detector_avg_return
 from scanner.regime import regime_label
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
 BACKTEST_RESULTS_PATH = Path(__file__).parent / "backtest_results.json"
+REALISTIC_BACKTEST_PATH = Path(__file__).parent / "realistic_backtest_results.json"
+
+
+def load_realistic_backtest_expectancy(min_n: int) -> dict[tuple[str, str], float]:
+    """
+    Real expectancy (in R) per (detector, direction) from
+    realistic_backtest.py's historical simulation - the SAME stop/target-
+    respecting methodology as the live journal (see
+    journal.detector_expectancy), just at much larger scale (thousands of
+    simulated trades vs. the live journal's slower-accumulating real ones).
+
+    Expectancy, not raw win rate, is what actually determines whether a
+    detector makes or loses money - a structural pattern with a wide,
+    geometry-based target only needs a low win rate to be profitable (e.g.
+    ascending_triangle/bullish: 29.3% win rate against a 14.96:1 average
+    R:R is comfortably profitable, needing only ~6.3% to break even), while
+    a 2:1 generic ATR-based detector needs ~33.3%. Comparing every detector
+    against one flat win-rate bar would blacklist the system's best
+    performers alongside its worst - this is what a flat threshold
+    literally did on the first pass here before being caught and fixed.
+    """
+    if not REALISTIC_BACKTEST_PATH.exists():
+        return {}
+    summary = json.loads(REALISTIC_BACKTEST_PATH.read_text()).get("summary", {})
+    out = {}
+    for key, entry in summary.items():
+        if entry["n"] < min_n:
+            continue
+        detector, _, direction = key.rpartition("/")
+        out[(detector, direction)] = entry["win_rate"] * (1 + entry["avg_risk_reward"]) - 1
+    return out
 
 
 def load_config() -> dict:
@@ -149,15 +180,20 @@ def main():
     min_conf = cfg["output"]["min_confluence"]
     weights = load_detector_weights(cfg)
     risk_cfg = cfg.get("risk", {})
-    # Detectors the LIVE journal has already proven lose money at the actual
-    # stop/target sizing used here - a much harder, more honest bar than
-    # backtest_results.json's plain forward-return check (see risk.py's
-    # setup_risk_plan docstring). These are refused as a trade basis
-    # entirely, no matter how tight their stop looks.
+    # Detectors proven to lose money at the actual stop/target sizing used
+    # here - a much harder, more honest bar than backtest_results.json's
+    # plain forward-return check (see risk.py's setup_risk_plan docstring).
+    # Two sources, merged: the large-scale historical simulation
+    # (realistic_backtest.py, thousands of trades, same methodology as the
+    # live journal) fills in a verdict for every detector immediately;
+    # the live journal takes precedence once it has enough real samples of
+    # its own, since it reflects current market conditions the historical
+    # simulation can't. Either way, refused as a trade basis entirely, no
+    # matter how tight the stop looks.
     min_n = risk_cfg.get("min_reliable_n", 10)
-    min_win_rate = risk_cfg.get("min_detector_win_rate", 0.35)
-    reliability = detector_reliability(min_n)
-    unreliable = {k for k, wr in reliability.items() if wr < min_win_rate}
+    min_expectancy = risk_cfg.get("min_detector_expectancy", 0.0)
+    expectancy = {**load_realistic_backtest_expectancy(min_n), **detector_expectancy(min_n)}
+    unreliable = {k for k, exp in expectancy.items() if exp < min_expectancy}
     # Target calibration also uses the live journal (real, stop-respecting
     # outcome_pct), not backtest_results.json's naive forward return - same
     # reason as the blacklist above, and same min_n gate so a target can't
@@ -170,8 +206,8 @@ def main():
     else:
         print("(no backtest_results.json found - strength is unweighted; run backtest.py to enable weighting)\n")
     if unreliable:
-        print(f"(blacklisted as trade basis - proven losing live: "
-              f"{', '.join(f'{n}/{d} ({reliability[(n,d)]:.0%})' for n, d in sorted(unreliable))})\n")
+        print(f"(blacklisted as trade basis - negative expectancy at their own R:R: "
+              f"{', '.join(f'{n}/{d} ({expectancy[(n,d)]:+.2f}R)' for n, d in sorted(unreliable))})\n")
     report = {"generated_at": datetime.now(timezone.utc).isoformat(), "results": []}
 
     # Pairs are scanned concurrently (each pair's own timeframes are still

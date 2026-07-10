@@ -20,6 +20,7 @@ from pathlib import Path
 from scanner.data import get_klines
 
 JOURNAL_PATH = Path(__file__).resolve().parent.parent / "journal.jsonl"
+FAILED_PATH = Path(__file__).resolve().parent.parent / "failed_trades.jsonl"
 
 
 def _load(path: Path = JOURNAL_PATH) -> list[dict]:
@@ -222,6 +223,34 @@ def check_open_entries(path: Path = JOURNAL_PATH, horizon_candles: int = 20,
     return resolved_entries
 
 
+def log_failed_trades(resolved: list[dict], path: Path = FAILED_PATH) -> int:
+    """
+    Pull every non-win outcome (loss or expired) out into its own file,
+    separate from the main journal - a dedicated place to actually review
+    what didn't work and why, instead of it being buried among wins in
+    journal.jsonl. Each row carries everything needed for a post-mortem:
+    the detector/signals that fired, the exact entry/stop/target, and how
+    price actually moved (outcome_price/outcome_pct) - a "loss" means price
+    hit the stop, an "expired" means it never reached either level within
+    the horizon (often a sign the stop/target distances were miscalibrated
+    for that setup, not that the direction was wrong).
+
+    Returns the number of rows appended.
+    """
+    failed = [e for e in resolved if e["status"] in ("loss", "expired")]
+    if not failed:
+        return 0
+    with open(path, "a") as f:
+        for e in failed:
+            row = dict(e)
+            row["note"] = (f"stop hit - price moved {e['outcome_pct']:+.2f}% against the {e['bias']} entry"
+                           if e["status"] == "loss" else
+                           f"expired unresolved - price ended {e['outcome_pct']:+.2f}% from entry, "
+                           f"never reached stop or target")
+            f.write(json.dumps(row) + "\n")
+    return len(failed)
+
+
 def detector_reliability(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tuple[str, str], float]:
     """
     Real win rate per (detector, direction) from the FULL resolved (win/loss)
@@ -241,6 +270,37 @@ def detector_reliability(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tup
         groups.setdefault((e["based_on"], e["bias"]), []).append(e["status"])
     return {key: statuses.count("win") / len(statuses)
             for key, statuses in groups.items() if len(statuses) >= min_n}
+
+
+def detector_expectancy(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tuple[str, str], float]:
+    """
+    Real expectancy (in R, i.e. multiples of risk) per (detector, direction)
+    from the full resolved (win/loss) live history: win_rate * (1 + avg R:R)
+    - 1. Zero at breakeven, positive is real edge.
+
+    detector_reliability's flat win-rate comparison is WRONG for detectors
+    whose R:R varies a lot - e.g. a structural pattern with a 15:1 R:R only
+    needs a ~6% win rate to be profitable, so comparing its win rate against
+    a flat threshold tuned for a 2:1 setup would blacklist a genuinely
+    excellent detector. Expectancy is the correct, R:R-aware comparison:
+    it's negative if and only if the detector actually loses money at its
+    own real reward:risk, regardless of what that ratio happens to be.
+    """
+    entries = [e for e in _load(path) if e["status"] in ("win", "loss")]
+    groups: dict[tuple[str, str], list[dict]] = {}
+    for e in entries:
+        groups.setdefault((e["based_on"], e["bias"]), []).append(e)
+    out = {}
+    for key, es in groups.items():
+        if len(es) < min_n:
+            continue
+        wins = sum(1 for e in es if e["status"] == "win")
+        win_rate = wins / len(es)
+        rrs = [abs(e["target"] - e["entry"]) / abs(e["entry"] - e["stop"])
+              for e in es if e["entry"] != e["stop"]]
+        avg_rr = sum(rrs) / len(rrs) if rrs else 0
+        out[key] = win_rate * (1 + avg_rr) - 1
+    return out
 
 
 def detector_avg_return(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tuple[str, str], float]:

@@ -33,14 +33,37 @@ STRUCTURAL_NAMES = {
 }
 
 
+def _structural_levels_valid(s: dict, close: float) -> bool:
+    """
+    Structural patterns (triangle/wedge/H&S/flag) fit a trendline through a
+    handful of pivot points and extrapolate it to "now" - when that linear
+    fit doesn't track price well, the extrapolated level can land on the
+    WRONG side of the current close (e.g. a "resistance" that's actually
+    below price), which silently produces a backwards stop/target: a
+    bearish trade with its stop BELOW entry instead of above. A stop/target
+    pair only makes sense if the stop and target actually bracket price in
+    the direction implied - bullish needs stop < close < target, bearish
+    needs stop > close > target.
+    """
+    if s["direction"] == "bullish":
+        return s["stop"] < close < s["target"]
+    if s["direction"] == "bearish":
+        return s["stop"] > close > s["target"]
+    return True
+
+
 def attach_atr_risk(signals: list[dict], close: float, atr: float, atr_mult: float,
                     reward_risk: float, max_stop_pct: float | None = None) -> list[dict]:
     """
-    Fill stop/target for any signal that doesn't already carry structural
-    levels. ATR scales with candle size, so on high timeframes (1w/1M) a
-    fixed multiplier can produce a stop 30-40% away from price - useless as
-    an actual risk plan. max_stop_pct caps the distance to a sane fraction
-    of price regardless of how wide the raw ATR is.
+    Fill stop/target for any signal that doesn't already carry VALID
+    structural levels (see _structural_levels_valid - a structural pattern
+    whose geometry produced a backwards stop gets its levels discarded and
+    falls through to the generic ATR-based ones below instead of silently
+    handing out a broken trade plan). ATR scales with candle size, so on
+    high timeframes (1w/1M) a fixed multiplier can produce a stop 30-40%
+    away from price - useless as an actual risk plan. max_stop_pct caps the
+    distance to a sane fraction of price regardless of how wide the raw
+    ATR is.
     """
     if atr is None or atr <= 0:
         return signals
@@ -49,7 +72,10 @@ def attach_atr_risk(signals: list[dict], close: float, atr: float, atr_mult: flo
         distance = min(distance, close * max_stop_pct / 100)
     for s in signals:
         if "stop" in s and "target" in s:
-            continue
+            if _structural_levels_valid(s, close):
+                continue
+            del s["stop"]
+            del s["target"]
         if s["direction"] == "bullish":
             s["stop"] = close - distance
             s["target"] = close + distance * reward_risk
