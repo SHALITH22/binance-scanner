@@ -43,8 +43,26 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          touch journal.jsonl
-          git add journal.jsonl
+          # journal.jsonl/failed_trades.jsonl are append-only and multiple
+          # runs (15-min schedule + manual triggers) can genuinely overlap -
+          # git's default line-based merge treats "both sides appended
+          # different new rows" as a hard conflict and fails the whole step,
+          # silently losing that run's journal writes. This content-aware
+          # driver (scripts/merge_journal.py, wired via .gitattributes)
+          # merges by (symbol, timeframe, detector, logged_at) instead, so
+          # a normal overlapping-run race resolves automatically.
+          git config merge.journal-merge.name "journal.jsonl/failed_trades.jsonl content-aware merge"
+          git config merge.journal-merge.driver "python scripts/merge_journal.py %O %A %B"
+          touch journal.jsonl failed_trades.jsonl
+          git add journal.jsonl failed_trades.jsonl
           git diff --cached --quiet || git commit -m "Update journal [skip ci]"
-          git pull --rebase --autostash
-          git push
+          # Retry a few times in case another run's push lands in the
+          # narrow window between our pull and our push.
+          for i in 1 2 3; do
+            if git pull --rebase --autostash && git push; then
+              break
+            fi
+            echo "push attempt $i failed, retrying in 5s..."
+            git rebase --abort 2>/dev/null || true
+            sleep 5
+          done
