@@ -11,6 +11,7 @@ or to a Telegram notifier.)
 
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -22,7 +23,7 @@ from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
 from scanner.notify import notify_report
 from scanner.risk import attach_atr_risk, setup_risk_plan
-from scanner.journal import log_signals, detector_recent_form
+from scanner.journal import log_signals, detector_recent_form, mark_notified, detector_reliability
 from scanner.regime import regime_label
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
@@ -106,7 +107,7 @@ def confluence_score(signals: list[dict], weights: dict | None = None) -> tuple[
 
 
 def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
-             avg_returns: dict | None = None) -> dict:
+             avg_returns: dict | None = None, unreliable: set | None = None) -> dict:
     result = {"symbol": symbol, "timeframes": {}}
     # One live-price call shared across all timeframes for this symbol - the
     # closed candle's close can be up to a full candle-period stale (up to
@@ -136,7 +137,8 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
             regime = regime_label(df["close"].values, len(df) - 1)
             risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
                                    avg_returns, risk_cfg.get("min_calibrated_move_pct", 0.3),
-                                   risk_cfg.get("account_size"), risk_cfg.get("account_risk_pct", 1.0))
+                                   risk_cfg.get("account_size"), risk_cfg.get("account_risk_pct", 1.0),
+                                   unreliable)
             if risk:
                 risk["recent_form"] = detector_recent_form(risk["based_on"], bias,
                                                            cfg.get("journal", {}).get("form_lookback", 5))
@@ -170,49 +172,74 @@ def main():
     min_conf = cfg["output"]["min_confluence"]
     weights = load_detector_weights(cfg)
     avg_returns = load_detector_avg_returns(cfg)
+    risk_cfg = cfg.get("risk", {})
+    # Detectors the LIVE journal has already proven lose money at the actual
+    # stop/target sizing used here - a much harder, more honest bar than
+    # backtest_results.json's plain forward-return check (see risk.py's
+    # setup_risk_plan docstring). These are refused as a trade basis
+    # entirely, no matter how tight their stop looks.
+    min_n = risk_cfg.get("min_reliable_n", 10)
+    min_win_rate = risk_cfg.get("min_detector_win_rate", 0.35)
+    reliability = detector_reliability(min_n)
+    unreliable = {k for k, wr in reliability.items() if wr < min_win_rate}
 
     print(f"Scanning {len(pairs)} pairs x {len(timeframes)} timeframes...")
     if weights:
         print(f"(strength weighted by backtested edge - {len(weights)} detector/direction weights loaded)\n")
     else:
         print("(no backtest_results.json found - strength is unweighted; run backtest.py to enable weighting)\n")
+    if unreliable:
+        print(f"(blacklisted as trade basis - proven losing live: "
+              f"{', '.join(f'{n}/{d} ({reliability[(n,d)]:.0%})' for n, d in sorted(unreliable))})\n")
     report = {"generated_at": datetime.now(timezone.utc).isoformat(), "results": []}
 
-    for symbol in pairs:
+    # Pairs are scanned concurrently (each pair's own timeframes are still
+    # fetched sequentially inside scan_pair) - this is what makes a 100-pair
+    # x 9-timeframe run fit inside a 15-minute schedule instead of taking
+    # ~13 minutes serially. get_klines already retries with backoff on 429s,
+    # so a burst of concurrent requests self-throttles rather than failing.
+    concurrency = cfg.get("scan_concurrency", 8)
+
+    def _scan(symbol):
         try:
-            res = scan_pair(symbol, timeframes, cfg, weights, avg_returns)
+            return symbol, scan_pair(symbol, timeframes, cfg, weights, avg_returns, unreliable)
         except Exception as e:
             print(f"  [error] {symbol}: {e}")
-            continue
-        if not res["timeframes"]:
-            continue
-        res = annotate_htf(res, timeframes)
-        res["max_strength"] = max(d["strength"] for d in res["timeframes"].values())
-        report["results"].append(res)
+            return symbol, None
 
-        # console output for setups meeting min confluence
-        for tf, data in res["timeframes"].items():
-            if data["strength"] >= min_conf:
-                if cfg.get("mtf", {}).get("require_agreement", False) and not data["htf_agrees"]:
-                    continue
-                print(f"{symbol} [{tf}]  {data['bias'].upper()} (strength {data['strength']})  close={data['close']:.6g}  [HTF: {data['htf_note']}]  [regime: {data['regime']}]")
-                for s in data["signals"]:
-                    print(f"    - {s['name']}: {s['detail']}")
-                if data["risk"]:
-                    r = data["risk"]
-                    rr = f"{r['risk_reward']}:1" if r["risk_reward"] else "n/a"
-                    print(f"    risk: entry={r['entry']:.6g} stop={r['stop']:.6g} "
-                          f"target={r['target']:.6g} (R:R {rr}, based on {r['based_on']}, "
-                          f"target: {r['target_basis']})")
-                    if r.get("position"):
-                        p = r["position"]
-                        print(f"    position: risk {p['account_risk_pct']}% (${p['dollar_risk']}) "
-                              f"-> {p['units']:g} units (~${p['position_value']})")
-                    if r.get("recent_form"):
-                        f = r["recent_form"]
-                        print(f"    recent form for {r['based_on']}/{data['bias']}: "
-                              f"{f['wins']}W-{f['losses']}L (last {f['n']})")
-                print()
+    with ThreadPoolExecutor(max_workers=concurrency) as executor:
+        futures = [executor.submit(_scan, symbol) for symbol in pairs]
+        for future in as_completed(futures):
+            symbol, res = future.result()
+            if not res or not res["timeframes"]:
+                continue
+            res = annotate_htf(res, timeframes)
+            res["max_strength"] = max(d["strength"] for d in res["timeframes"].values())
+            report["results"].append(res)
+
+            # console output for setups meeting min confluence
+            for tf, data in res["timeframes"].items():
+                if data["strength"] >= min_conf:
+                    if cfg.get("mtf", {}).get("require_agreement", False) and not data["htf_agrees"]:
+                        continue
+                    print(f"{symbol} [{tf}]  {data['bias'].upper()} (strength {data['strength']})  close={data['close']:.6g}  [HTF: {data['htf_note']}]  [regime: {data['regime']}]")
+                    for s in data["signals"]:
+                        print(f"    - {s['name']}: {s['detail']}")
+                    if data["risk"]:
+                        r = data["risk"]
+                        rr = f"{r['risk_reward']}:1" if r["risk_reward"] else "n/a"
+                        print(f"    risk: entry={r['entry']:.6g} stop={r['stop']:.6g} "
+                              f"target={r['target']:.6g} (R:R {rr}, based on {r['based_on']}, "
+                              f"target: {r['target_basis']})")
+                        if r.get("position"):
+                            p = r["position"]
+                            print(f"    position: risk {p['account_risk_pct']}% (${p['dollar_risk']}) "
+                                  f"-> {p['units']:g} units (~${p['position_value']})")
+                        if r.get("recent_form"):
+                            f = r["recent_form"]
+                            print(f"    recent form for {r['based_on']}/{data['bias']}: "
+                                  f"{f['wins']}W-{f['losses']}L (last {f['n']})")
+                    print()
 
     report["results"].sort(key=lambda r: r["max_strength"], reverse=True)
 
@@ -221,14 +248,19 @@ def main():
         out.write_text(json.dumps(report, indent=2, default=str))
         print(f"\nFull report written to {out}")
 
-    sent = notify_report(report, cfg)
-    if sent:
-        print(f"Sent {sent} Telegram alert(s)")
-
+    new_keys = None
     if cfg.get("journal", {}).get("enabled", True):
         logged = log_signals(report, cfg)
         if logged:
-            print(f"Logged {logged} new setup(s) to journal.jsonl")
+            print(f"Logged {len(logged)} new setup(s) to journal.jsonl")
+        # Only these are genuinely new setups this run - notify_report uses
+        # this to skip re-alerting a setup that's already open and unchanged.
+        new_keys = {(e["symbol"], e["timeframe"], e["based_on"]) for e in logged}
+
+    sent, sent_keys = notify_report(report, cfg, new_keys=new_keys)
+    if sent:
+        print(f"Sent {sent} Telegram alert(s)")
+        mark_notified(sent_keys)
 
 
 if __name__ == "__main__":

@@ -107,7 +107,8 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
                     min_risk_reward: float = 1.0, avg_returns: dict | None = None,
                     min_calibrated_move_pct: float = 0.3,
                     account_size: float | None = None,
-                    account_risk_pct: float = 1.0) -> dict | None:
+                    account_risk_pct: float = 1.0,
+                    unreliable: set | None = None) -> dict | None:
     """
     Pick one consolidated entry/stop/target for the setup: prefer a
     structural (pattern-based) level over a generic ATR one, since it's
@@ -124,9 +125,19 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
     nothing does, this returns None rather than presenting a plan that
     risks more than it can gain. Among qualifying candidates, prefer the
     tightest (most disciplined) stop distance.
+
+    `unreliable` is a set of (detector_name, direction) pairs to refuse
+    outright, regardless of stop tightness or backtested edge - these are
+    detectors the live journal has already shown to lose money at this
+    stop/target sizing (see journal.detector_reliability). Without this,
+    plan selection picks purely on which candidate's stop happens to be
+    numerically tightest, which has nothing to do with whether that
+    detector has ever actually worked.
     """
+    unreliable = unreliable or set()
     candidates = [s for s in signals
-                  if s["direction"] == bias and "stop" in s and "target" in s]
+                  if s["direction"] == bias and "stop" in s and "target" in s
+                  and (s["name"], s["direction"]) not in unreliable]
     if not candidates:
         return None
     avg_returns = avg_returns or {}

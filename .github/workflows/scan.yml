@@ -2,9 +2,16 @@ name: Scan
 
 on:
   schedule:
-    # Offset from :00/:30 - GitHub's own docs warn that on-the-hour/half-hour
+    # As close to continuous as a scheduled job can get: every 15 minutes.
+    # Offset from :00/:15/:30/:45 - GitHub's own docs warn that on-the-hour
     # schedules hit peak load and are frequently delayed or dropped.
-    - cron: "13,43 * * * *"  # every 30 minutes, at :13 and :43, UTC
+    # NOTE: this cadence needs the repo to be public - a private repo only
+    # gets 2,000 free Actions minutes/month, and a full scan run takes several
+    # minutes, so 96 runs/day would blow through that budget in days. Public
+    # repos get unlimited free minutes. (No secrets live in the code - the
+    # bot token/chat id are GitHub encrypted secrets referenced via env:
+    # below, never committed - so making this public doesn't expose them.)
+    - cron: "3,18,33,48 * * * *"  # every 15 minutes, UTC
   workflow_dispatch: {}   # allows manual "Run workflow" from the Actions tab
 
 permissions:

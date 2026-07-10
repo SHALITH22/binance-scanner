@@ -13,6 +13,7 @@ scheduled/cloud run.
 """
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -36,13 +37,18 @@ def _append(entry: dict, path: Path = JOURNAL_PATH) -> None:
         f.write(json.dumps(entry) + "\n")
 
 
-def log_signals(report: dict, cfg: dict, path: Path = JOURNAL_PATH) -> int:
+def log_signals(report: dict, cfg: dict, path: Path = JOURNAL_PATH) -> list[dict]:
     """
     Log every setup meeting min_confluence. Skips symbol/timeframe/pattern
     combos that already have an unresolved ("open") journal entry - without
     this, a persistent state signal (e.g. ema_stack, which fires on every
     run while the trend holds) would spam a fresh row every single scan
     instead of one row per real occurrence.
+
+    Returns the list of entries newly appended this run (not just a count) -
+    callers use this to know exactly which setups are genuinely new, e.g.
+    to only Telegram-alert on first occurrence instead of re-sending the
+    same open setup every scan.
     """
     min_conf = cfg["output"]["min_confluence"]
     existing = _load(path)
@@ -50,7 +56,7 @@ def log_signals(report: dict, cfg: dict, path: Path = JOURNAL_PATH) -> int:
     next_id = max((e["id"] for e in existing), default=0) + 1
     now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
 
-    logged = 0
+    logged = []
     for res in report["results"]:
         for tf, data in res["timeframes"].items():
             if data["strength"] < min_conf or not data.get("risk"):
@@ -59,7 +65,7 @@ def log_signals(report: dict, cfg: dict, path: Path = JOURNAL_PATH) -> int:
             key = (res["symbol"], tf, r["based_on"])
             if key in open_keys:
                 continue
-            _append({
+            entry = {
                 "id": next_id,
                 "logged_at": now,
                 "symbol": res["symbol"],
@@ -75,32 +81,108 @@ def log_signals(report: dict, cfg: dict, path: Path = JOURNAL_PATH) -> int:
                 "checked_at": None,
                 "outcome_price": None,
                 "outcome_pct": None,
-            }, path)
+                # Set True only once this specific setup actually goes out as
+                # a Telegram alert (main.py calls mark_notified after
+                # notify_report) - logging happens at a lower confluence bar
+                # than alerting does, so not every journal row was ever sent.
+                # Reminders must only fire for setups the user was actually told about.
+                "notified": False,
+                "last_reminded_at": None,
+            }
+            _append(entry, path)
             open_keys.add(key)
             next_id += 1
-            logged += 1
+            logged.append(entry)
     return logged
 
 
+def mark_notified(keys: set, path: Path = JOURNAL_PATH) -> None:
+    """
+    Flag journal entries that actually went out as a Telegram alert.
+    Logging happens at a lower confluence bar than alerting does, so not
+    every journal row was ever sent - reminders (get_due_reminders) must
+    only fire for setups the user was actually notified about, otherwise
+    a reminder would reference an alert they never received.
+    """
+    if not keys:
+        return
+    entries = _load(path)
+    changed = False
+    for e in entries:
+        if (e["symbol"], e["timeframe"], e["based_on"]) in keys:
+            e["notified"] = True
+            changed = True
+    if changed:
+        _save_all(entries, path)
+
+
+def get_due_reminders(cooldown_hours: float = 4.0, path: Path = JOURNAL_PATH) -> list[dict]:
+    """
+    Open, already-notified entries that haven't had a reminder (or the
+    original alert) within cooldown_hours - a lightweight "still open" ping
+    so a setup doesn't go silent for hours while it remains live, without
+    re-sending the full alert every scan the way the old notifier did.
+    """
+    entries = _load(path)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    due = []
+    for e in entries:
+        if e["status"] != "open" or not e.get("notified"):
+            continue
+        last = e.get("last_reminded_at") or e["logged_at"]
+        elapsed_hours = (now - datetime.fromisoformat(last)).total_seconds() / 3600
+        if elapsed_hours >= cooldown_hours:
+            due.append(e)
+    return due
+
+
+def mark_reminded(reminded: list[dict], path: Path = JOURNAL_PATH) -> None:
+    if not reminded:
+        return
+    now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
+    ids = {e["id"] for e in reminded}
+    entries = _load(path)
+    for e in entries:
+        if e["id"] in ids:
+            e["last_reminded_at"] = now
+    _save_all(entries, path)
+
+
 def check_open_entries(path: Path = JOURNAL_PATH, horizon_candles: int = 20,
-                       kline_limit: int = 500) -> int:
+                       kline_limit: int = 500, concurrency: int = 8) -> list[dict]:
     """
     For every open entry, fetch candles since it was logged and see whether
     stop or target was hit first. If neither hits within horizon_candles,
     mark it "expired" and record what price actually did - a signal that
     never resolves either way is still useful information (it means the
     stop/target distances were too wide, or the setup just chopped).
+
+    Returns the entries that were resolved this run (win/loss/expired) so
+    callers can push a close-out notice (e.g. Telegram) - otherwise a setup
+    that already hit its stop keeps looking "live" to anyone who only reads
+    the original alert message.
+
+    Candle fetches run concurrently (this runs in the same scheduled window
+    as main.py's scan, so it needs to fit the same cadence) - the actual
+    outcome logic below stays sequential since it only mutates each entry's
+    own dict, no shared state to worry about.
     """
     entries = _load(path)
     if not entries:
-        return 0
+        return []
+    open_entries = [e for e in entries if e["status"] == "open"]
+    if not open_entries:
+        return []
     now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
-    updated = 0
+    resolved_entries = []
 
-    for e in entries:
-        if e["status"] != "open":
-            continue
-        df = get_klines(e["symbol"], e["timeframe"], kline_limit)
+    def _fetch(e):
+        return e, get_klines(e["symbol"], e["timeframe"], kline_limit)
+
+    with ThreadPoolExecutor(max_workers=concurrency) as executor:
+        fetched = list(executor.map(_fetch, open_entries))
+
+    for e, df in fetched:
         if df is None:
             continue
         logged_at = datetime.fromisoformat(e["logged_at"])
@@ -133,11 +215,32 @@ def check_open_entries(path: Path = JOURNAL_PATH, horizon_candles: int = 20,
             e["checked_at"] = now
             e["outcome_price"] = outcome_price
             e["outcome_pct"] = round((outcome_price - e["entry"]) / e["entry"] * 100, 3)
-            updated += 1
+            resolved_entries.append(e)
 
-    if updated:
+    if resolved_entries:
         _save_all(entries, path)
-    return updated
+    return resolved_entries
+
+
+def detector_reliability(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tuple[str, str], float]:
+    """
+    Real win rate per (detector, direction) from the FULL resolved (win/loss)
+    forward-tested history - not backtest_results.json, which measures a much
+    easier bar (was price higher/lower N candles later, ignoring the stop
+    entirely) and can show a detector as strongly edged while it actually
+    loses money once a realistic stop-loss is respected. This is what
+    setup_risk_plan uses to refuse a detector that has demonstrably failed
+    live, regardless of what any backtest claims about it.
+
+    Only returned once there are at least min_n decided trades, so a
+    handful of early results doesn't permanently blacklist a detector.
+    """
+    entries = [e for e in _load(path) if e["status"] in ("win", "loss")]
+    groups: dict[tuple[str, str], list[str]] = {}
+    for e in entries:
+        groups.setdefault((e["based_on"], e["bias"]), []).append(e["status"])
+    return {key: statuses.count("win") / len(statuses)
+            for key, statuses in groups.items() if len(statuses) >= min_n}
 
 
 def detector_recent_form(detector_name: str, direction: str, n: int = 5,

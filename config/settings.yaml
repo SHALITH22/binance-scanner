@@ -73,6 +73,7 @@ timeframes:
   - 1h
   - 2h
   - 4h
+  - 6h
   - 8h
   - 1d
   - 1w
@@ -80,6 +81,15 @@ timeframes:
 
 # How many candles to fetch per timeframe (max 1000)
 candle_limit: 300
+
+# How many pairs (main.py) / open journal entries (journal_check.py) to
+# fetch concurrently. Each pair's own timeframes are still fetched
+# sequentially - this parallelizes across pairs/entries, not within one.
+# Needed to fit a full 100-pair x 9-timeframe scan inside a 15-minute
+# schedule (~13 min serially vs a few minutes at this concurrency).
+# get_klines already retries with backoff on 429s, so raising this is safe
+# up to a point, but too high risks harsher rate-limiting from Binance.
+scan_concurrency: 8
 
 # --- Indicator settings ---
 indicators:
@@ -162,6 +172,17 @@ risk:
   # skipped if that average move is smaller than this (percent), since a
   # near-zero empirical move isn't a meaningful target either.
   min_calibrated_move_pct: 0.3
+  # A detector/direction is refused as a trade basis once the LIVE journal
+  # shows it losing at this stop/target sizing (win rate below this, with
+  # at least min_reliable_n decided trades) - regardless of what
+  # backtest_results.json claims, since that backtest measures a much
+  # easier bar (raw N-candle forward return, no stop-loss involved) and can
+  # look like real edge while actually losing money once a realistic stop
+  # is respected. 0.35 sits below the ~0.33 breakeven win rate for a 2:1
+  # reward:risk trade, so this only blocks detectors that are clearly
+  # losing, not merely below-average.
+  min_detector_win_rate: 0.35
+  min_reliable_n: 10
   # Professional rule: risk a fixed small % of account equity per trade,
   # sized off the actual stop distance - never a guess, never scaled by
   # conviction. Set account_size to your real trading account value (in
@@ -202,3 +223,11 @@ notify:
     enabled: true           # set true after filling .env (see .env.example)
     min_strength: 3         # only alert on setups at least this strong
     only_htf_agreeing: true # skip setups whose higher timeframes conflict
+    # All timeframes are eligible for alerts (no allowlist). Scans run
+    # frequently (see .github/workflows/scan.yml) so even fast timeframes
+    # get caught and read close to when they actually fire.
+    # timeframes: [4h, 8h, 1d, 1w, 1M]   # uncomment to restrict again
+    # A setup only fires its full alert once (see main.py's new_keys dedup).
+    # While it stays open, send a short "still open" ping at most this often
+    # - not a repeat of the full message, just enough to say it's still live.
+    reminder_cooldown_hours: 4.0

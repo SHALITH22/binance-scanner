@@ -11,7 +11,8 @@ from pathlib import Path
 
 import yaml
 
-from scanner.journal import check_open_entries, summarize, JOURNAL_PATH
+from scanner.journal import check_open_entries, summarize, JOURNAL_PATH, get_due_reminders, mark_reminded
+from scanner.notify import notify_outcomes, notify_reminders
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
 
@@ -25,8 +26,23 @@ def main():
         print("No journal.jsonl yet - run main.py first to log some setups.")
         return
 
-    updated = check_open_entries(horizon_candles=horizon)
-    print(f"Resolved {updated} entr{'y' if updated == 1 else 'ies'}.\n")
+    resolved = check_open_entries(horizon_candles=horizon, concurrency=cfg.get("scan_concurrency", 8))
+    print(f"Resolved {len(resolved)} entr{'y' if len(resolved) == 1 else 'ies'}.\n")
+
+    # Close-out notice - without this, a setup that already hit its stop or
+    # target keeps looking "live" to anyone who only saw the original alert.
+    sent = notify_outcomes(resolved, cfg)
+    if sent:
+        print(f"Sent {sent} outcome notice(s)")
+
+    # Lightweight "still open" ping for setups that were actually alerted on
+    # and remain open past the cooldown - not a repeat of the full alert.
+    cooldown = cfg.get("notify", {}).get("telegram", {}).get("reminder_cooldown_hours", 4.0)
+    due = get_due_reminders(cooldown_hours=cooldown)
+    reminded = notify_reminders(due, cfg)
+    if reminded:
+        print(f"Sent {reminded} reminder(s)")
+        mark_reminded(due)
 
     summary = summarize()
     if not summary:
