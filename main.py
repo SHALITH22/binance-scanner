@@ -140,14 +140,34 @@ def confluence_score(signals: list[dict], weights: dict | None = None) -> tuple[
     return "mixed", round(max(bull, bear), 2)
 
 
+def get_market_trend(symbol: str, timeframes: list[str], cfg: dict) -> dict[str, bool | None]:
+    """
+    Current trend (close > EMA20) per timeframe for a market-leader symbol
+    (BTC/ETH) - True=bullish, False=bearish, None if data unavailable.
+    Computed once per run and shared across every pair's scan (see
+    risk.setup_risk_plan's market_disagrees param for why this matters).
+    """
+    trend = {}
+    for tf in timeframes:
+        df = get_klines(symbol, tf, cfg["candle_limit"])
+        if df is None or len(df) < 25:
+            trend[tf] = None
+            continue
+        ema20 = df["close"].ewm(span=20, adjust=False).mean()
+        trend[tf] = bool(df["close"].iloc[-1] > ema20.iloc[-1])
+    return trend
+
+
 def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
-             avg_returns: dict | None = None, unreliable: set | None = None) -> dict:
+             avg_returns: dict | None = None, unreliable: set | None = None,
+             btc_trend: dict | None = None, eth_trend: dict | None = None) -> dict:
     result = {"symbol": symbol, "timeframes": {}}
     # One live-price call shared across all timeframes for this symbol - the
     # closed candle's close can be up to a full candle-period stale (up to
     # 24h on 1d), so alerts quote this instead for entry/display, while
     # detection still correctly uses only closed candles (no lookahead).
     live_price = get_current_price(symbol)
+    is_market_leader = symbol in ("BTCUSDT", "ETHUSDT")
     for tf in timeframes:
         df = get_klines(symbol, tf, cfg["candle_limit"])
         if df is None or len(df) < 60:
@@ -169,10 +189,23 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
             # reading doesn't block an alert, but tells you to size down /
             # be more skeptical of continuation-style signals right now.
             regime = regime_label(df["close"].values, len(df) - 1)
+            # BTC/ETH trend agreeing with THIS trade's direction means the
+            # setup is more likely just beta (see risk.py's market_disagrees
+            # docstring) - BTC/ETH themselves are the market leaders, so the
+            # filter doesn't apply to trading them against themselves.
+            btc_bull = None if is_market_leader else (btc_trend or {}).get(tf)
+            eth_bull = None if is_market_leader else (eth_trend or {}).get(tf)
+            if is_market_leader:
+                market_disagrees = True
+            elif btc_bull is None or eth_bull is None:
+                market_disagrees = None
+            else:
+                trade_is_bullish = bias == "bullish"
+                market_disagrees = (btc_bull != trade_is_bullish) and (eth_bull != trade_is_bullish)
             risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
                                    avg_returns, risk_cfg.get("min_calibrated_move_pct", 0.3),
                                    risk_cfg.get("account_size"), risk_cfg.get("account_risk_pct", 1.0),
-                                   unreliable)
+                                   unreliable, market_disagrees)
             if risk:
                 risk["recent_form"] = detector_recent_form(risk["based_on"], bias,
                                                            cfg.get("journal", {}).get("form_lookback", 5))
@@ -225,6 +258,11 @@ def main():
     # reason as the blacklist above, and same min_n gate so a target can't
     # get calibrated off a handful of early results either.
     avg_returns = detector_avg_return(min_n)
+    # BTC/ETH's own current trend per timeframe, fetched once and shared
+    # across every pair's scan - see risk.setup_risk_plan's market_disagrees
+    # docstring for why an altcoin setup needs to disagree with both to count.
+    btc_trend = get_market_trend("BTCUSDT", timeframes, cfg)
+    eth_trend = get_market_trend("ETHUSDT", timeframes, cfg)
 
     print(f"Scanning {len(pairs)} pairs x {len(timeframes)} timeframes...")
     if weights:
@@ -245,7 +283,8 @@ def main():
 
     def _scan(symbol):
         try:
-            return symbol, scan_pair(symbol, timeframes, cfg, weights, avg_returns, unreliable)
+            return symbol, scan_pair(symbol, timeframes, cfg, weights, avg_returns, unreliable,
+                                     btc_trend, eth_trend)
         except Exception as e:
             print(f"  [error] {symbol}: {e}")
             return symbol, None

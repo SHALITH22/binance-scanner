@@ -159,7 +159,14 @@ risk:
   reward_risk_ratio: 2.0   # target distance = stop distance * this ratio
   # ATR scales with candle size - on 1w/1M timeframes a fixed multiplier can
   # put the stop 30-40% away, which isn't a usable plan. Cap it (percent of price).
-  max_stop_pct: 8.0
+  # Confirmed against two real leveraged trades (EPICUSDT 1w, TACUSDT 1d):
+  # both got stopped out within ~0.5% of the exact calculated stop price - the
+  # math is correct - but an 8% stop at 10-20x leverage produces an 80-160%
+  # margin loss on one ordinary, expected stop-out. Halved to keep a single
+  # stop-out survivable at the leverage levels actually being used; this only
+  # affects generic ATR-based signals (structural patterns compute their own
+  # geometry-based stop, uncapped, since that's tied to real chart structure).
+  max_stop_pct: 4.0
   # A structural pattern's stop and target come from independent geometry
   # (e.g. a flag's stop is the whole consolidation, its target is just the
   # pole height) - nothing guarantees a favorable ratio. Reject any risk

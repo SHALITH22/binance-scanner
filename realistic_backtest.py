@@ -106,7 +106,12 @@ def simulate_pair_tf(symbol: str, tf: str, cfg: dict, horizon_candles: int, min_
         bias, strength = confluence_score(signals)
         if strength < min_confluence:
             continue
-        risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0))
+        # market_disagrees=True bypasses the live-only BTC/ETH filter - this
+        # script exists to measure a detector's RAW baseline performance
+        # (that's what discovered the filter's edge in the first place), so
+        # it must not have that filter silently applied via the default.
+        risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
+                               market_disagrees=True)
         if not risk:
             continue
         key = risk["based_on"]

@@ -129,12 +129,16 @@ def position_size(entry: float, stop: float, account_size: float | None,
     }
 
 
+MARKET_FILTER_NAMES = STRUCTURAL_NAMES | {"ema_stack"}
+
+
 def setup_risk_plan(signals: list[dict], bias: str, close: float,
                     min_risk_reward: float = 1.0, avg_returns: dict | None = None,
                     min_calibrated_move_pct: float = 0.3,
                     account_size: float | None = None,
                     account_risk_pct: float = 1.0,
-                    unreliable: set | None = None) -> dict | None:
+                    unreliable: set | None = None,
+                    market_disagrees: bool | None = None) -> dict | None:
     """
     Pick one consolidated entry/stop/target for the setup: prefer a
     structural (pattern-based) level over a generic ATR one, since it's
@@ -159,11 +163,24 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
     plan selection picks purely on which candidate's stop happens to be
     numerically tightest, which has nothing to do with whether that
     detector has ever actually worked.
+
+    `market_disagrees` is whether BTC's and ETH's own current trend
+    DISAGREES with `bias` - confirmed via a 2000+ trade backtest
+    (confluence_btc_backtest.py) that every one of our proven detectors
+    performs better - two of them flip from losing to winning - when an
+    altcoin's setup goes AGAINST the market leaders rather than with them.
+    A same-direction setup is more likely just beta (the whole market
+    moving together) diluting the pattern's own signal, not genuine
+    independent structure in that specific coin. Candidates in
+    MARKET_FILTER_NAMES (the detectors this was actually tested on) are
+    refused unless market_disagrees is True - None (BTC/ETH data
+    unavailable) also refuses them, since the filter is unproven without it.
     """
     unreliable = unreliable or set()
     candidates = [s for s in signals
                   if s["direction"] == bias and "stop" in s and "target" in s
-                  and (s["name"], s["direction"]) not in unreliable]
+                  and (s["name"], s["direction"]) not in unreliable
+                  and (s["name"] not in MARKET_FILTER_NAMES or market_disagrees is True)]
     if not candidates:
         return None
     avg_returns = avg_returns or {}
