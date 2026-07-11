@@ -85,6 +85,13 @@ def format_setup(symbol: str, tf: str, data: dict, generated_at: str | None = No
         lines.append(f"Risk: entry {r['entry']:.6g} / stop {r['stop']:.6g} / "
                      f"target {r['target']:.6g} (R:R {rr}, based on {escape(r['based_on'])}, "
                      f"target: {escape(r['target_basis'])})")
+        if r.get("win_probability") is not None:
+            # Real, measured win rate for this exact detector/direction
+            # (pooled from backtest + live data) - not a black-box "AI
+            # confidence score", the same number that decides whether this
+            # detector is even allowed to alert at all.
+            lines.append(f"Win probability: {r['win_probability']:.0%} "
+                         f"(measured, {escape(r['based_on'])}/{escape(data['bias'])})")
         if r.get("position"):
             p = r["position"]
             lines.append(f"Position size: risk {p['account_risk_pct']}% (${p['dollar_risk']}) "

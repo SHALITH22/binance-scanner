@@ -251,15 +251,17 @@ def log_failed_trades(resolved: list[dict], path: Path = FAILED_PATH) -> int:
     return len(failed)
 
 
-def detector_reliability(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tuple[str, str], float]:
+def detector_reliability(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tuple[str, str], tuple[float, int]]:
     """
     Real win rate per (detector, direction) from the FULL resolved (win/loss)
     forward-tested history - not backtest_results.json, which measures a much
     easier bar (was price higher/lower N candles later, ignoring the stop
     entirely) and can show a detector as strongly edged while it actually
-    loses money once a realistic stop-loss is respected. This is what
-    setup_risk_plan uses to refuse a detector that has demonstrably failed
-    live, regardless of what any backtest claims about it.
+    loses money once a realistic stop-loss is respected. Returns (win_rate,
+    n) - used for the "win probability" shown in each alert (see
+    main.combined_detector_win_rate), pooled against realistic_backtest.py's
+    larger sample the same way detector_expectancy is, so a handful of
+    early live results can't swing a displayed probability on their own.
 
     Only returned once there are at least min_n decided trades, so a
     handful of early results doesn't permanently blacklist a detector.
@@ -268,7 +270,7 @@ def detector_reliability(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tup
     groups: dict[tuple[str, str], list[str]] = {}
     for e in entries:
         groups.setdefault((e["based_on"], e["bias"]), []).append(e["status"])
-    return {key: statuses.count("win") / len(statuses)
+    return {key: (statuses.count("win") / len(statuses), len(statuses))
             for key, statuses in groups.items() if len(statuses) >= min_n}
 
 

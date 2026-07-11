@@ -23,7 +23,7 @@ from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
 from scanner.notify import notify_report
 from scanner.risk import attach_atr_risk, setup_risk_plan, classify_funding
-from scanner.journal import log_signals, detector_recent_form, mark_notified, detector_expectancy, detector_avg_return
+from scanner.journal import log_signals, detector_recent_form, mark_notified, detector_expectancy, detector_avg_return, detector_reliability
 from scanner.regime import regime_label
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
@@ -63,28 +63,56 @@ def load_realistic_backtest_expectancy(min_n: int) -> dict[tuple[str, str], tupl
     return out
 
 
-def combined_detector_expectancy(backtest: dict[tuple[str, str], tuple[float, int]],
-                                 live: dict[tuple[str, str], tuple[float, int]]
-                                 ) -> dict[tuple[str, str], float]:
+def _pool_by_sample_size(backtest: dict[tuple[str, str], tuple[float, int]],
+                         live: dict[tuple[str, str], tuple[float, int]]
+                         ) -> dict[tuple[str, str], float]:
     """
-    Pool the two expectancy sources weighted by sample size, instead of
-    letting the live journal simply override the backtest the moment it
-    crosses min_n. A live-only override is wrong here: min_n=10 live trades
-    is nowhere near enough to overturn a 300+ trade historical simulation,
-    but that's exactly what a naive override does - this is what let
+    Weighted-by-n pool of two (value, n) sources, instead of letting the
+    live one simply override the backtest the moment it crosses min_n. A
+    live-only override is wrong here: min_n=10 live trades is nowhere near
+    enough to overturn a 300+ trade historical simulation, but that's
+    exactly what a naive override does - this is what let
     volume_spike/bullish (backtest: -0.265R over 315 trades) get
     UN-blacklisted by just 10-15 live trades that happened to average
     +0.38R, pure small-sample noise given how far it diverges from the
     much larger sample. Weighting by n means a detector's verdict only
     flips once the live evidence is substantial enough to actually matter.
+    Used for both expectancy (the blacklist) and win rate (the probability
+    shown in each alert).
     """
     out = {}
     for key in set(backtest) | set(live):
-        bt_exp, bt_n = backtest.get(key, (0.0, 0))
-        live_exp, live_n = live.get(key, (0.0, 0))
+        bt_val, bt_n = backtest.get(key, (0.0, 0))
+        live_val, live_n = live.get(key, (0.0, 0))
         total_n = bt_n + live_n
-        out[key] = (bt_exp * bt_n + live_exp * live_n) / total_n if total_n else 0.0
+        out[key] = (bt_val * bt_n + live_val * live_n) / total_n if total_n else 0.0
     return out
+
+
+def combined_detector_expectancy(backtest: dict[tuple[str, str], tuple[float, int]],
+                                 live: dict[tuple[str, str], tuple[float, int]]
+                                 ) -> dict[tuple[str, str], float]:
+    return _pool_by_sample_size(backtest, live)
+
+
+def load_realistic_backtest_win_rate(min_n: int) -> dict[tuple[str, str], tuple[float, int]]:
+    """Win rate (not expectancy) per (detector, direction) from realistic_backtest.py, for display."""
+    if not REALISTIC_BACKTEST_PATH.exists():
+        return {}
+    summary = json.loads(REALISTIC_BACKTEST_PATH.read_text()).get("summary", {})
+    out = {}
+    for key, entry in summary.items():
+        if entry["n"] < min_n:
+            continue
+        detector, _, direction = key.rpartition("/")
+        out[(detector, direction)] = (entry["win_rate"], entry["n"])
+    return out
+
+
+def combined_detector_win_rate(backtest: dict[tuple[str, str], tuple[float, int]],
+                               live: dict[tuple[str, str], tuple[float, int]]
+                               ) -> dict[tuple[str, str], float]:
+    return _pool_by_sample_size(backtest, live)
 
 
 def load_config() -> dict:
@@ -160,7 +188,9 @@ def get_market_trend(symbol: str, timeframes: list[str], cfg: dict) -> dict[str,
 
 def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
              avg_returns: dict | None = None, unreliable: set | None = None,
-             btc_trend: dict | None = None, eth_trend: dict | None = None) -> dict:
+             btc_trend: dict | None = None, eth_trend: dict | None = None,
+             win_rates: dict | None = None) -> dict:
+    win_rates = win_rates or {}
     result = {"symbol": symbol, "timeframes": {}}
     # One live-price call shared across all timeframes for this symbol - the
     # closed candle's close can be up to a full candle-period stale (up to
@@ -220,6 +250,10 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
             if risk:
                 risk["recent_form"] = detector_recent_form(risk["based_on"], bias,
                                                            cfg.get("journal", {}).get("form_lookback", 5))
+                # Real win probability for this exact detector/direction -
+                # pooled from backtest + live data the same way the
+                # blacklist is, not a black-box replica of any paid tool.
+                risk["win_probability"] = win_rates.get((risk["based_on"], bias))
             result["timeframes"][tf] = {
                 "close": close,
                 "bias": bias,
@@ -264,6 +298,10 @@ def main():
     min_expectancy = risk_cfg.get("min_detector_expectancy", 0.0)
     expectancy = combined_detector_expectancy(load_realistic_backtest_expectancy(min_n), detector_expectancy(min_n))
     unreliable = {k for k, exp in expectancy.items() if exp < min_expectancy}
+    # Real win probability per detector/direction, pooled the same way, for
+    # display in each alert - not a black-box replica of any paid signal
+    # tool, just our own actually-measured numbers surfaced honestly.
+    win_rates = combined_detector_win_rate(load_realistic_backtest_win_rate(min_n), detector_reliability(min_n))
     # Target calibration also uses the live journal (real, stop-respecting
     # outcome_pct), not backtest_results.json's naive forward return - same
     # reason as the blacklist above, and same min_n gate so a target can't
@@ -295,7 +333,7 @@ def main():
     def _scan(symbol):
         try:
             return symbol, scan_pair(symbol, timeframes, cfg, weights, avg_returns, unreliable,
-                                     btc_trend, eth_trend)
+                                     btc_trend, eth_trend, win_rates)
         except Exception as e:
             print(f"  [error] {symbol}: {e}")
             return symbol, None
