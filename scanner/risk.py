@@ -163,7 +163,8 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
                     account_risk_pct: float = 1.0,
                     unreliable: set | None = None,
                     market_disagrees: bool | None = None,
-                    funding_ok: bool = True) -> dict | None:
+                    funding_ok: bool = True,
+                    target_fraction: float = 1.0) -> dict | None:
     """
     Pick one consolidated entry/stop/target for the setup: prefer a
     structural (pattern-based) level over a generic ATR one, since it's
@@ -235,8 +236,17 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
     pick = min(pool, key=lambda s: abs(close - s["stop"]))
 
     stop = pick["stop"]
-    target = effective_target(pick)
-    calibrated = (target != pick["target"])
+    raw_target = effective_target(pick)
+    calibrated = (raw_target != pick["target"])
+    # Confirmed via a 6000+ trade backtest (win_rate_levers_backtest.py):
+    # taking profit at 85% of the full geometric/calibrated target is a
+    # small, genuine improvement over waiting for the full 100% - both win
+    # rate (30.6% -> 35.5%) and expectancy (+0.440R -> +0.453R) improved,
+    # unlike more aggressive fractions (e.g. 50%), which raise win rate but
+    # give back more expectancy than they gain. Applied uniformly to
+    # whichever candidate was already picked above - this doesn't change
+    # detector/candidate selection, only how much of the move is captured.
+    target = close + (raw_target - close) * target_fraction
     risk = abs(close - stop)
     reward = abs(target - close)
     return {

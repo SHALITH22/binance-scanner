@@ -214,7 +214,8 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
             risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
                                    avg_returns, risk_cfg.get("min_calibrated_move_pct", 0.3),
                                    risk_cfg.get("account_size"), risk_cfg.get("account_risk_pct", 1.0),
-                                   unreliable, market_disagrees, funding_ok)
+                                   unreliable, market_disagrees, funding_ok,
+                                   risk_cfg.get("target_fraction", 1.0))
             if risk:
                 risk["recent_form"] = detector_recent_form(risk["based_on"], bias,
                                                            cfg.get("journal", {}).get("form_lookback", 5))

@@ -179,6 +179,14 @@ risk:
   # skipped if that average move is smaller than this (percent), since a
   # near-zero empirical move isn't a meaningful target either.
   min_calibrated_move_pct: 0.3
+  # Take profit at this fraction of the full geometric/calibrated target
+  # instead of waiting for 100% of it. Confirmed via a 6000+ trade backtest
+  # (win_rate_levers_backtest.py) that 0.85 is a small, genuine improvement
+  # (higher win rate AND higher expectancy than 1.0) - lower fractions
+  # raise win rate further but give back more expectancy than they gain,
+  # so this isn't a "chase win rate" knob, it's the one point on that
+  # curve that's actually better on both axes.
+  target_fraction: 0.85
   # A detector/direction is refused as a trade basis once its EXPECTANCY
   # (win_rate * (1 + avg R:R) - 1, i.e. real profit/loss in units of risk)
   # goes below this, using the live journal once it has min_reliable_n
@@ -210,7 +218,13 @@ risk:
 # track record, not just a retrospective backtest.
 journal:
   enabled: true
-  horizon_candles: 20  # if neither stop nor target is hit within this many candles, mark "expired"
+  # Confirmed via a 6000+ trade backtest (win_rate_levers_backtest.py):
+  # giving a trade more time to resolve is a small, genuine, free
+  # improvement - both win rate (30.6% -> 33.0%) and expectancy
+  # (+0.440R -> +0.480R) improved monotonically from 20 to 60 candles,
+  # meaning "expired" setups more often just needed more room than the
+  # pattern was actually broken.
+  horizon_candles: 60  # if neither stop nor target is hit within this many candles, mark "expired"
   # How many of a detector's most recent decided (win/loss) trades to show
   # as its "recent form" in alerts - surfaces a current losing streak so
   # you don't act on a detector's backtested average as if it still applies.
