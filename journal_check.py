@@ -7,12 +7,19 @@ Run this periodically (e.g. daily) - separately from main.py's scanning -
 so open setups get resolved once their stop/target/horizon plays out.
 """
 
+import sys
 from pathlib import Path
 
 import yaml
 
 from scanner.journal import check_open_entries, summarize, JOURNAL_PATH, get_due_reminders, mark_reminded, log_failed_trades
 from scanner.notify import notify_outcomes, notify_reminders
+
+# See main.py for why - Windows' console codepage can't encode some
+# Unicode characters that show up in symbol names or pattern details.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8")
 
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
 

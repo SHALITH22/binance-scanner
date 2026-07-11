@@ -10,12 +10,24 @@ or to a Telegram notifier.)
 """
 
 import json
+import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 
 import yaml
+
+# Windows defaults stdout/stderr to the console codepage (cp1252), which
+# can't encode some Unicode characters (real crash: an 18-minute, 530-pair
+# scan lost all its output to a buffered UnicodeEncodeError near the end,
+# almost certainly from a coin name or pattern detail somewhere in the much
+# larger symbol set). Force UTF-8 explicitly so this can't recur regardless
+# of what characters show up - GitHub Actions (Ubuntu) already defaults to
+# UTF-8, so this only changes behavior on Windows.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8")
 
 from scanner.data import get_klines, get_all_usdt_pairs, get_top_pairs_by_volume, get_current_price, get_funding_rate
 from scanner.indicators import enrich

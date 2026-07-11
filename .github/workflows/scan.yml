@@ -2,16 +2,22 @@ name: Scan
 
 on:
   schedule:
-    # As close to continuous as a scheduled job can get: every 15 minutes.
-    # Offset from :00/:15/:30/:45 - GitHub's own docs warn that on-the-hour
-    # schedules hit peak load and are frequently delayed or dropped.
+    # Every 20 minutes, offset from :00/:20/:40 - GitHub's own docs warn
+    # on-the-hour schedules hit peak load and are frequently delayed or
+    # dropped. Widened from 15 to 20 minutes when scan_all (~530 pairs,
+    # every USDT perpetual) replaced the 100-pair top-volume list - a full
+    # scan now takes ~18 minutes, which no longer fit inside 15. The wider
+    # coin coverage is what actually fixed near-zero alert delivery (a
+    # 100-pair scan found ~1-4 setups worth logging per run; 530 pairs
+    # found 89, 7 of which cleared every quality gate) - worth the slower
+    # cadence rather than shrinking coverage back down.
     # NOTE: this cadence needs the repo to be public - a private repo only
     # gets 2,000 free Actions minutes/month, and a full scan run takes several
-    # minutes, so 96 runs/day would blow through that budget in days. Public
+    # minutes, so this would blow through that budget in days. Public
     # repos get unlimited free minutes. (No secrets live in the code - the
     # bot token/chat id are GitHub encrypted secrets referenced via env:
     # below, never committed - so making this public doesn't expose them.)
-    - cron: "3,18,33,48 * * * *"  # every 15 minutes, UTC
+    - cron: "3,23,43 * * * *"  # every 20 minutes, UTC
   workflow_dispatch: {}   # allows manual "Run workflow" from the Actions tab
 
 permissions:

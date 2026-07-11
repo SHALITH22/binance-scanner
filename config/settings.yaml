@@ -12,7 +12,7 @@
 # pairs_mode: static      -> always use the `pairs` list below verbatim.
 # scan_all: true           -> ignore pairs_mode entirely, fetch every USDT
 #   perpetual (~530 pairs, much slower, not recommended for 30-min cadence).
-scan_all: false
+scan_all: true
 pairs_mode: top_volume
 top_n_pairs: 100
 # Fallback only - used if a live top-volume fetch fails, e.g. when
