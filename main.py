@@ -31,13 +31,15 @@ BACKTEST_RESULTS_PATH = Path(__file__).parent / "backtest_results.json"
 REALISTIC_BACKTEST_PATH = Path(__file__).parent / "realistic_backtest_results.json"
 
 
-def load_realistic_backtest_expectancy(min_n: int) -> dict[tuple[str, str], float]:
+def load_realistic_backtest_expectancy(min_n: int) -> dict[tuple[str, str], tuple[float, int]]:
     """
     Real expectancy (in R) per (detector, direction) from
     realistic_backtest.py's historical simulation - the SAME stop/target-
     respecting methodology as the live journal (see
     journal.detector_expectancy), just at much larger scale (thousands of
     simulated trades vs. the live journal's slower-accumulating real ones).
+    Returns (expectancy, n) - see detector_reliability_verdict for why the
+    sample size matters here, not just the expectancy value.
 
     Expectancy, not raw win rate, is what actually determines whether a
     detector makes or loses money - a structural pattern with a wide,
@@ -57,7 +59,31 @@ def load_realistic_backtest_expectancy(min_n: int) -> dict[tuple[str, str], floa
         if entry["n"] < min_n:
             continue
         detector, _, direction = key.rpartition("/")
-        out[(detector, direction)] = entry["win_rate"] * (1 + entry["avg_risk_reward"]) - 1
+        out[(detector, direction)] = (entry["win_rate"] * (1 + entry["avg_risk_reward"]) - 1, entry["n"])
+    return out
+
+
+def combined_detector_expectancy(backtest: dict[tuple[str, str], tuple[float, int]],
+                                 live: dict[tuple[str, str], tuple[float, int]]
+                                 ) -> dict[tuple[str, str], float]:
+    """
+    Pool the two expectancy sources weighted by sample size, instead of
+    letting the live journal simply override the backtest the moment it
+    crosses min_n. A live-only override is wrong here: min_n=10 live trades
+    is nowhere near enough to overturn a 300+ trade historical simulation,
+    but that's exactly what a naive override does - this is what let
+    volume_spike/bullish (backtest: -0.265R over 315 trades) get
+    UN-blacklisted by just 10-15 live trades that happened to average
+    +0.38R, pure small-sample noise given how far it diverges from the
+    much larger sample. Weighting by n means a detector's verdict only
+    flips once the live evidence is substantial enough to actually matter.
+    """
+    out = {}
+    for key in set(backtest) | set(live):
+        bt_exp, bt_n = backtest.get(key, (0.0, 0))
+        live_exp, live_n = live.get(key, (0.0, 0))
+        total_n = bt_n + live_n
+        out[key] = (bt_exp * bt_n + live_exp * live_n) / total_n if total_n else 0.0
     return out
 
 
@@ -183,16 +209,16 @@ def main():
     # Detectors proven to lose money at the actual stop/target sizing used
     # here - a much harder, more honest bar than backtest_results.json's
     # plain forward-return check (see risk.py's setup_risk_plan docstring).
-    # Two sources, merged: the large-scale historical simulation
-    # (realistic_backtest.py, thousands of trades, same methodology as the
-    # live journal) fills in a verdict for every detector immediately;
-    # the live journal takes precedence once it has enough real samples of
-    # its own, since it reflects current market conditions the historical
-    # simulation can't. Either way, refused as a trade basis entirely, no
+    # Two sources, pooled by sample size (not a live-overrides-backtest
+    # rule - see combined_detector_expectancy's docstring for why that was
+    # wrong): the large-scale historical simulation (realistic_backtest.py,
+    # thousands of trades) supplies most of the weight until the live
+    # journal has accumulated enough real trades of its own to meaningfully
+    # shift the verdict. Either way, refused as a trade basis entirely, no
     # matter how tight the stop looks.
     min_n = risk_cfg.get("min_reliable_n", 10)
     min_expectancy = risk_cfg.get("min_detector_expectancy", 0.0)
-    expectancy = {**load_realistic_backtest_expectancy(min_n), **detector_expectancy(min_n)}
+    expectancy = combined_detector_expectancy(load_realistic_backtest_expectancy(min_n), detector_expectancy(min_n))
     unreliable = {k for k, exp in expectancy.items() if exp < min_expectancy}
     # Target calibration also uses the live journal (real, stop-respecting
     # outcome_pct), not backtest_results.json's naive forward return - same

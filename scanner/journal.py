@@ -272,11 +272,16 @@ def detector_reliability(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tup
             for key, statuses in groups.items() if len(statuses) >= min_n}
 
 
-def detector_expectancy(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tuple[str, str], float]:
+def detector_expectancy(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tuple[str, str], tuple[float, int]]:
     """
     Real expectancy (in R, i.e. multiples of risk) per (detector, direction)
     from the full resolved (win/loss) live history: win_rate * (1 + avg R:R)
-    - 1. Zero at breakeven, positive is real edge.
+    - 1. Zero at breakeven, positive is real edge. Returns (expectancy, n)
+    - the sample size is included because a handful of live trades is not
+    a reliable enough basis to override a larger historical dataset (see
+    main.py, which pools this against realistic_backtest.py's much bigger
+    sample weighted by n, rather than letting a small live sample simply
+    win outright the moment it crosses min_n).
 
     detector_reliability's flat win-rate comparison is WRONG for detectors
     whose R:R varies a lot - e.g. a structural pattern with a 15:1 R:R only
@@ -299,7 +304,7 @@ def detector_expectancy(min_n: int = 10, path: Path = JOURNAL_PATH) -> dict[tupl
         rrs = [abs(e["target"] - e["entry"]) / abs(e["entry"] - e["stop"])
               for e in es if e["entry"] != e["stop"]]
         avg_rr = sum(rrs) / len(rrs) if rrs else 0
-        out[key] = win_rate * (1 + avg_rr) - 1
+        out[key] = (win_rate * (1 + avg_rr) - 1, len(es))
     return out
 
 
