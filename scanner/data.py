@@ -136,6 +136,79 @@ def get_current_price(symbol: str, futures: bool = True) -> float | None:
     return None
 
 
+def get_funding_rate(symbol: str, limit: int = 100) -> pd.DataFrame | None:
+    """
+    Historical funding rate (perpetual futures only - no spot equivalent,
+    so no Binance.US fallback exists for this). Extreme funding readings
+    reflect how one-sided leveraged positioning currently is - the closest
+    free, exchange-native equivalent to what a service like Coinglass
+    surfaces. Returns a DataFrame with funding_time/funding_rate, or None
+    on failure.
+    """
+    try:
+        resp = requests.get(f"{FUTURES_URL}/fapi/v1/fundingRate",
+                            params={"symbol": symbol, "limit": limit}, timeout=15)
+        if not resp.ok:
+            return None
+        data = resp.json()
+        if not data:
+            return None
+        df = pd.DataFrame(data)
+        df["fundingRate"] = pd.to_numeric(df["fundingRate"])
+        df["fundingTime"] = pd.to_datetime(df["fundingTime"], unit="ms")
+        return df
+    except requests.RequestException:
+        return None
+
+
+def get_open_interest_hist(symbol: str, period: str = "4h", limit: int = 180) -> pd.DataFrame | None:
+    """
+    Historical open interest - only ~30 days retained by Binance regardless
+    of limit requested (a hard exchange-side limit, not something this
+    function controls), unlike kline history which goes back much further.
+    period must be one of Binance's supported bucket sizes: 5m/15m/30m/1h/2h/4h/6h/12h/1d.
+    """
+    try:
+        resp = requests.get(f"{FUTURES_URL}/futures/data/openInterestHist",
+                            params={"symbol": symbol, "period": period, "limit": limit}, timeout=15)
+        if not resp.ok:
+            return None
+        data = resp.json()
+        if not data:
+            return None
+        df = pd.DataFrame(data)
+        df["sumOpenInterest"] = pd.to_numeric(df["sumOpenInterest"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        return df
+    except requests.RequestException:
+        return None
+
+
+def get_long_short_ratio(symbol: str, period: str = "4h", limit: int = 180,
+                         top_traders: bool = False) -> pd.DataFrame | None:
+    """
+    Long/short account ratio - global (all accounts) by default, or top-
+    trader accounts only when top_traders=True (Binance's own "smart
+    money" cohort - the accounts with the largest positions). Same ~30 day
+    retention as open interest history.
+    """
+    endpoint = "topLongShortAccountRatio" if top_traders else "globalLongShortAccountRatio"
+    try:
+        resp = requests.get(f"{FUTURES_URL}/futures/data/{endpoint}",
+                            params={"symbol": symbol, "period": period, "limit": limit}, timeout=15)
+        if not resp.ok:
+            return None
+        data = resp.json()
+        if not data:
+            return None
+        df = pd.DataFrame(data)
+        df["longShortRatio"] = pd.to_numeric(df["longShortRatio"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms")
+        return df
+    except requests.RequestException:
+        return None
+
+
 def get_klines(symbol: str, interval: str, limit: int = 300,
                futures: bool = True, max_retries: int = 3) -> pd.DataFrame | None:
     """

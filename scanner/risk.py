@@ -32,6 +32,30 @@ STRUCTURAL_NAMES = {
     "bull_flag", "bear_flag", "bull_pennant", "bear_pennant",
 }
 
+EXTREME_FUNDING_THRESHOLD = 0.0005  # 0.05% per 8h funding interval - a commonly cited "hot" reading
+
+
+def classify_funding(rate: float | None, bias: str) -> str | None:
+    """
+    Whether the current funding rate reflects the crowd positioned WITH or
+    AGAINST a trade's direction. None if funding data is unavailable.
+
+    Confirmed via an 8000+ trade backtest (funding_rate_backtest.py) that
+    trading AGAINST an extreme funding reading actually loses money here
+    (-0.10R) - the opposite of the classic "fade the overleveraged crowd"
+    assumption - while neutral and with-the-crowd readings both stay
+    profitable. Our proven detectors are trend-continuation patterns, and
+    extreme funding here more often reflects a genuinely strong ongoing
+    trend than imminent reversal, so fighting it tends to fight the trend.
+    """
+    if rate is None:
+        return None
+    if rate > EXTREME_FUNDING_THRESHOLD:
+        return "with_crowd" if bias == "bullish" else "against_crowd"
+    if rate < -EXTREME_FUNDING_THRESHOLD:
+        return "with_crowd" if bias == "bearish" else "against_crowd"
+    return "neutral"
+
 
 def _structural_levels_valid(s: dict, close: float) -> bool:
     """
@@ -138,7 +162,8 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
                     account_size: float | None = None,
                     account_risk_pct: float = 1.0,
                     unreliable: set | None = None,
-                    market_disagrees: bool | None = None) -> dict | None:
+                    market_disagrees: bool | None = None,
+                    funding_ok: bool = True) -> dict | None:
     """
     Pick one consolidated entry/stop/target for the setup: prefer a
     structural (pattern-based) level over a generic ATR one, since it's
@@ -175,12 +200,20 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
     MARKET_FILTER_NAMES (the detectors this was actually tested on) are
     refused unless market_disagrees is True - None (BTC/ETH data
     unavailable) also refuses them, since the filter is unproven without it.
+
+    `funding_ok` (default True, so callers that don't compute it aren't
+    affected) is False when classify_funding says the trade is going
+    AGAINST an extreme funding reading - the one funding_rate_backtest.py
+    bucket that actually loses money. Unlike market_disagrees this
+    defaults permissive, since most trades (neutral or with-the-crowd
+    funding) are fine - only the specific proven-bad case is excluded.
     """
     unreliable = unreliable or set()
     candidates = [s for s in signals
                   if s["direction"] == bias and "stop" in s and "target" in s
                   and (s["name"], s["direction"]) not in unreliable
-                  and (s["name"] not in MARKET_FILTER_NAMES or market_disagrees is True)]
+                  and (s["name"] not in MARKET_FILTER_NAMES or market_disagrees is True)
+                  and (s["name"] not in MARKET_FILTER_NAMES or funding_ok)]
     if not candidates:
         return None
     avg_returns = avg_returns or {}

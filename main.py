@@ -17,12 +17,12 @@ from pathlib import Path
 
 import yaml
 
-from scanner.data import get_klines, get_all_usdt_pairs, get_top_pairs_by_volume, get_current_price
+from scanner.data import get_klines, get_all_usdt_pairs, get_top_pairs_by_volume, get_current_price, get_funding_rate
 from scanner.indicators import enrich
 from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
 from scanner.notify import notify_report
-from scanner.risk import attach_atr_risk, setup_risk_plan
+from scanner.risk import attach_atr_risk, setup_risk_plan, classify_funding
 from scanner.journal import log_signals, detector_recent_form, mark_notified, detector_expectancy, detector_avg_return
 from scanner.regime import regime_label
 
@@ -168,6 +168,10 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
     # detection still correctly uses only closed candles (no lookahead).
     live_price = get_current_price(symbol)
     is_market_leader = symbol in ("BTCUSDT", "ETHUSDT")
+    # Funding rate is per-symbol, not per-timeframe (one perpetual contract,
+    # one funding rate) - fetched once here like live_price.
+    fr_df = get_funding_rate(symbol, limit=1)
+    current_funding = float(fr_df["fundingRate"].iloc[-1]) if fr_df is not None and not fr_df.empty else None
     for tf in timeframes:
         df = get_klines(symbol, tf, cfg["candle_limit"])
         if df is None or len(df) < 60:
@@ -202,10 +206,15 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
             else:
                 trade_is_bullish = bias == "bullish"
                 market_disagrees = (btc_bull != trade_is_bullish) and (eth_bull != trade_is_bullish)
+            # Confirmed via funding_rate_backtest.py (8000+ trades): trading
+            # AGAINST an extreme funding reading loses money here - the
+            # opposite of the classic "fade the crowd" assumption - so only
+            # that specific bucket is excluded (see risk.classify_funding).
+            funding_ok = classify_funding(current_funding, bias) != "against_crowd"
             risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
                                    avg_returns, risk_cfg.get("min_calibrated_move_pct", 0.3),
                                    risk_cfg.get("account_size"), risk_cfg.get("account_risk_pct", 1.0),
-                                   unreliable, market_disagrees)
+                                   unreliable, market_disagrees, funding_ok)
             if risk:
                 risk["recent_form"] = detector_recent_form(risk["based_on"], bias,
                                                            cfg.get("journal", {}).get("form_lookback", 5))

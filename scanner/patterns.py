@@ -113,6 +113,26 @@ def detect_stochrsi_extreme(df: pd.DataFrame, oversold: float, overbought: float
     return None
 
 
+def detect_qqe_cross(df: pd.DataFrame) -> dict | None:
+    """
+    QQE trend flip on the last closed candle (see indicators.add_qqe) -
+    RSI MA crossing its own trailing volatility band. "strong"/"weak"
+    qualifier is how far RSI MA sits from the neutral 50 line at the
+    moment of the flip - a flip near 50 is a marginal call, one further
+    from center reflects more decisive momentum already in hand.
+    """
+    trend_now, trend_prev = _last(df, "qqe_trend"), _last(df, "qqe_trend", 2)
+    if trend_now == trend_prev:
+        return None
+    rsi_ma = _last(df, "qqe_rsi_ma")
+    strength = "strong" if abs(rsi_ma - 50) > 15 else "weak"
+    if trend_now == 1:
+        return {"name": "qqe_cross", "direction": "bullish",
+                "detail": f"QQE flipped bullish ({strength}, RSI MA {rsi_ma:.1f})"}
+    return {"name": "qqe_cross", "direction": "bearish",
+            "detail": f"QQE flipped bearish ({strength}, RSI MA {rsi_ma:.1f})"}
+
+
 def detect_volume_spike(df: pd.DataFrame, multiplier: float) -> dict | None:
     v, vma = _last(df, "volume"), _last(df, "volume_ma")
     if pd.isna(vma) or vma == 0:
@@ -498,6 +518,7 @@ def run_all_detectors(df: pd.DataFrame, cfg: dict) -> list[dict]:
         detect_ema_cross(df),
         detect_stochrsi_extreme(df, sig_cfg["stochrsi_oversold"], sig_cfg["stochrsi_overbought"],
                                 sig_cfg.get("stochrsi_require_turn", False)),
+        detect_qqe_cross(df),
         detect_volume_spike(df, sig_cfg["volume_spike_multiplier"]),
         detect_sr_break(df, levels),
         detect_sr_test(df, levels, sig_cfg["sr_tolerance_pct"]),
