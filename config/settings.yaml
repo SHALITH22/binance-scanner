@@ -167,6 +167,14 @@ risk:
   # affects generic ATR-based signals (structural patterns compute their own
   # geometry-based stop, uncapped, since that's tied to real chart structure).
   max_stop_pct: 4.0
+  # Reject any candidate whose stop is closer than this (percent of price) -
+  # a real stop this tight can get triggered by ordinary bid-ask spread or
+  # slippage alone, something a candle-based backtest can't see (win rate
+  # stayed flat 27-31% across every stop-width bucket including <0.2%,
+  # because the backtest assumes a perfect fill with no execution
+  # friction). Applies to every candidate, structural or generic - this is
+  # about real-world tradeability, not detector edge.
+  min_stop_pct: 0.5
   # A structural pattern's stop and target come from independent geometry
   # (e.g. a flag's stop is the whole consolidation, its target is just the
   # pole height) - nothing guarantees a favorable ratio. Reject any risk

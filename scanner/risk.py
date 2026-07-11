@@ -164,7 +164,8 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
                     unreliable: set | None = None,
                     market_disagrees: bool | None = None,
                     funding_ok: bool = True,
-                    target_fraction: float = 1.0) -> dict | None:
+                    target_fraction: float = 1.0,
+                    min_stop_pct: float = 0.5) -> dict | None:
     """
     Pick one consolidated entry/stop/target for the setup: prefer a
     structural (pattern-based) level over a generic ATR one, since it's
@@ -227,9 +228,23 @@ def setup_risk_plan(signals: list[dict], bias: str, close: float,
         risk = abs(close - s["stop"])
         return abs(effective_target(s) - close) / risk if risk > 0 else 0
 
-    qualifying = [s for s in candidates if rr(s) >= min_risk_reward]
+    def stop_pct(s):
+        return abs(close - s["stop"]) / close * 100 if close > 0 else 0
+
+    # A structural pattern's stop comes from its own chart geometry (e.g. a
+    # flag's invalidation is the bottom of the consolidation) - textbook
+    # correct, but a tight consolidation can put that level a fraction of a
+    # percent from entry. A backtest checking candle highs/lows against an
+    # exact price can't see the problem (found via win rate staying flat
+    # across stop-width buckets, 27-31% everywhere including <0.2%) because
+    # it assumes a perfect fill with zero bid-ask spread or slippage - in
+    # real trading a stop this tight can get triggered by spread/slippage
+    # alone, regardless of whether the pattern itself was ever actually
+    # wrong. Reject rather than widen it, since artificially moving a
+    # pattern's own invalidation level would misrepresent its real geometry.
+    qualifying = [s for s in candidates if rr(s) >= min_risk_reward and stop_pct(s) >= min_stop_pct]
     if not qualifying:
-        return None  # every candidate here risks more than it could gain - not a plan worth acting on
+        return None  # every candidate here risks more than it could gain, or has an unrealistically tight stop
 
     structural = [s for s in qualifying if s["name"] in STRUCTURAL_NAMES]
     pool = structural or qualifying
