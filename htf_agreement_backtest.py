@@ -117,7 +117,8 @@ def simulate_symbol(symbol: str, cfg: dict, min_confluence: int,
             if not proven_bias_signals:
                 continue
             risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
-                                   market_disagrees=True)
+                                   market_disagrees=True,
+                                   target_fraction=risk_cfg.get("target_fraction", 1.0))
             if not risk or risk["based_on"] not in PROVEN_NAMES:
                 continue
             key = risk["based_on"]

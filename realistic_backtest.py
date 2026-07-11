@@ -110,8 +110,14 @@ def simulate_pair_tf(symbol: str, tf: str, cfg: dict, horizon_candles: int, min_
         # script exists to measure a detector's RAW baseline performance
         # (that's what discovered the filter's edge in the first place), so
         # it must not have that filter silently applied via the default.
+        # target_fraction IS passed through (unlike market_disagrees) - this
+        # measures what's actually live, not a stale 100%-target scenario.
+        # Missing this was a real bug: after target_fraction=0.85 went live,
+        # this backtest kept measuring the harder, unscaled 100% target,
+        # understating every detector's real current win rate.
         risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
-                               market_disagrees=True)
+                               market_disagrees=True,
+                               target_fraction=risk_cfg.get("target_fraction", 1.0))
         if not risk:
             continue
         key = risk["based_on"]

@@ -255,7 +255,7 @@ mtf:
 # --- Notifications ---
 notify:
   telegram:
-    enabled: true           # set true after filling .env (see .env.example)
+    enabled: false          # disabled during 1000+ trade validation period (2026-07-11 to ~2026-07-18)
     min_strength: 3         # only alert on setups at least this strong
     only_htf_agreeing: true # skip setups whose higher timeframes conflict
     # All timeframes are eligible for alerts (no allowlist). Scans run

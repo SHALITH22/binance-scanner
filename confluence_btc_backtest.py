@@ -93,7 +93,8 @@ def simulate_pair_tf(symbol: str, tf: str, cfg: dict, horizon_candles: int, min_
         # measures - it needs the raw trade generated regardless of BTC/ETH
         # alignment, then checks that alignment against the outcome afterward.
         risk = setup_risk_plan(signals, bias, close, risk_cfg.get("min_risk_reward", 1.0),
-                               market_disagrees=True)
+                               market_disagrees=True,
+                               target_fraction=risk_cfg.get("target_fraction", 1.0))
         if not risk or risk["based_on"] not in PROVEN_NAMES:
             continue
         key = risk["based_on"]
