@@ -35,6 +35,20 @@ US_URL = "https://api.binance.us"
 PROXY_URL = os.environ.get("BINANCE_PROXY_URL", "").rstrip("/")
 PROXY_SECRET = os.environ.get("BINANCE_PROXY_SECRET")
 
+# Diagnostic counters, not behavior - the 403/exchangeInfo saga showed that
+# "falls through to the direct chain and shows no_data" looks identical
+# whether the proxy is misconfigured, unreachable, or actively rejecting
+# requests, and job console logs aren't readable via the API (confirmed:
+# GET /actions/jobs/{id}/logs needs admin rights this token doesn't have).
+# main.py writes this into scan_health.json - public, no auth needed - so
+# the real failure reason is visible without guessing.
+_proxy_stats = {"configured": False, "attempts": 0, "successes": 0,
+                "last_status": None, "last_error": None}
+
+
+def get_proxy_stats() -> dict:
+    return dict(_proxy_stats)
+
 
 def _proxy_get(path: str, params: dict, timeout: int) -> requests.Response | None:
     """
@@ -45,11 +59,21 @@ def _proxy_get(path: str, params: dict, timeout: int) -> requests.Response | Non
     """
     if not PROXY_URL:
         return None
+    _proxy_stats["configured"] = True
+    _proxy_stats["attempts"] += 1
     headers = {"X-Proxy-Secret": PROXY_SECRET} if PROXY_SECRET else {}
     try:
-        return requests.get(f"{PROXY_URL}{path}", params=params, headers=headers, timeout=timeout)
-    except requests.exceptions.RequestException:
+        resp = requests.get(f"{PROXY_URL}{path}", params=params, headers=headers, timeout=timeout)
+        _proxy_stats["last_status"] = resp.status_code
+        if resp.ok:
+            _proxy_stats["successes"] += 1
+        else:
+            _proxy_stats["last_error"] = f"HTTP {resp.status_code}: {resp.text[:200]}"
+        return resp
+    except requests.exceptions.RequestException as e:
+        _proxy_stats["last_error"] = f"{type(e).__name__}: {e}"[:200]
         return None
+
 
 KLINE_COLUMNS = [
     "open_time", "open", "high", "low", "close", "volume",

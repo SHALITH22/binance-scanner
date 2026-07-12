@@ -30,7 +30,8 @@ for _stream in (sys.stdout, sys.stderr):
         _stream.reconfigure(encoding="utf-8")
 
 from scanner.data import (get_klines, get_all_usdt_pairs, get_top_pairs_by_volume,
-                          get_top_pairs_by_volume_lightweight, get_current_price, get_funding_rate)
+                          get_top_pairs_by_volume_lightweight, get_current_price, get_funding_rate,
+                          get_proxy_stats)
 from scanner.indicators import enrich
 from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
@@ -501,6 +502,14 @@ def main():
         # of pairs", which otherwise look identical in pairs_with_errors alone.
         "used_pair_discovery_fallback": used_pair_discovery_fallback,
         "pair_discovery_method": pair_discovery_method,
+        # Diagnoses proxy failures that otherwise look identical to
+        # ordinary no_data errors - "configured": false means
+        # BINANCE_PROXY_URL never reached this run at all (secret not set
+        # or workflow env misconfigured); "attempts" vs "successes" and
+        # "last_status"/"last_error" show exactly what happened on the
+        # wire (e.g. 403 = secret mismatch, network error = Worker/DNS
+        # issue) - see scanner.data.get_proxy_stats.
+        "proxy_stats": get_proxy_stats(),
         "errors": pair_health,
     }, indent=2))
     if pair_health:
