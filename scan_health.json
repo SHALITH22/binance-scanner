@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-12T14:00:41.022045+00:00",
+  "generated_at": "2026-07-12T14:03:06.163807+00:00",
   "total_pairs": 40,
   "pairs_with_errors": 18,
   "errors": {
@@ -193,7 +193,7 @@
         "reason": "no_data"
       }
     ],
-    "SKYAIUSDT": [
+    "EDGEUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
@@ -231,7 +231,7 @@
         "reason": "no_data"
       }
     ],
-    "EDGEUSDT": [
+    "SKYAIUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
@@ -345,7 +345,7 @@
         "reason": "no_data"
       }
     ],
-    "LITUSDT": [
+    "THEUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
@@ -383,7 +383,7 @@
         "reason": "no_data"
       }
     ],
-    "THEUSDT": [
+    "LITUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
