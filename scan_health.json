@@ -1,9 +1,10 @@
 {
-  "generated_at": "2026-07-12T14:03:06.163807+00:00",
+  "generated_at": "2026-07-12T14:11:27.299444+00:00",
   "total_pairs": 40,
   "pairs_with_errors": 18,
+  "used_pair_discovery_fallback": true,
   "errors": {
-    "LABUSDT": [
+    "EVAAUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
@@ -41,7 +42,7 @@
         "reason": "no_data"
       }
     ],
-    "EVAAUSDT": [
+    "LABUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
@@ -117,7 +118,7 @@
         "reason": "no_data"
       }
     ],
-    "POWERUSDT": [
+    "VANRYUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
@@ -155,7 +156,7 @@
         "reason": "no_data"
       }
     ],
-    "VANRYUSDT": [
+    "POWERUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
@@ -535,7 +536,7 @@
         "reason": "no_data"
       }
     ],
-    "TAOUSDT": [
+    "TACUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
@@ -573,7 +574,7 @@
         "reason": "no_data"
       }
     ],
-    "TACUSDT": [
+    "TAOUSDT": [
       {
         "timeframe": "15m",
         "reason": "no_data"
