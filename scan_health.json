@@ -1,6 +1,691 @@
 {
-  "generated_at": "2026-07-12T13:51:05.152079+00:00",
-  "total_pairs": 0,
-  "pairs_with_errors": 0,
-  "errors": {}
+  "generated_at": "2026-07-12T14:00:41.022045+00:00",
+  "total_pairs": 40,
+  "pairs_with_errors": 18,
+  "errors": {
+    "LABUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "EVAAUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "TAGUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "POWERUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "VANRYUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "SKYAIUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "EDGEUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "1000PEPEUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "ESPORTSUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "LITUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "THEUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "BASEDUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "SLXUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "OUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "TAOUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "TACUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "ALLOUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ],
+    "SENTUSDT": [
+      {
+        "timeframe": "15m",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "2h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "6h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "8h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1w",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1M",
+        "reason": "no_data"
+      }
+    ]
+  }
 }
