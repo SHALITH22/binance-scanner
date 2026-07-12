@@ -283,6 +283,15 @@ def main():
     cfg = load_config()
     if cfg["scan_all"]:
         pairs = get_all_usdt_pairs()
+        if not pairs:
+            # get_all_usdt_pairs() returns [] on purpose when binance.com is
+            # briefly unreachable (see its docstring - never silently
+            # substitutes a different exchange's symbol catalog). Without
+            # this fallback, that produced a run that "succeeded" while
+            # scanning zero pairs - invisible before scan_health.json
+            # started reporting total_pairs, which is how this was found.
+            print("[warn] could not fetch full USDT pair list this run - falling back to static pairs list")
+            pairs = cfg["pairs"]
     elif cfg.get("pairs_mode") == "top_volume":
         # Refetched fresh on every run (not cached/daily) - which coins are
         # liquid enough to scan shifts constantly, so this must be as
