@@ -57,15 +57,28 @@ def get_all_usdt_pairs(futures: bool = True) -> list[str]:
     Fetch every actively trading USDT pair from the real global Binance
     (futures, falling back to spot on geo-block - never Binance.US, which
     has a different symbol catalog and would return the wrong universe).
-    Returns an empty list if binance.com is unreachable (geo-blocked)
-    rather than silently substituting a different exchange's pairs.
+    Returns an empty list if binance.com is unreachable (geo-blocked, or a
+    network-level failure - timeout/connection error) rather than silently
+    substituting a different exchange's pairs. A caller MUST treat an empty
+    return as "discovery failed", not "zero pairs currently trading" - see
+    main.py's scan_all fallback, added after a run silently scanned zero
+    pairs for 24+ hours (every run "succeeded" while doing nothing) because
+    nothing distinguished this from a legitimately quiet market.
     """
     for url in _endpoint_chain(futures, "exchangeInfo", include_us=False):
-        resp = requests.get(url, timeout=15)
+        try:
+            resp = requests.get(url, timeout=15)
+        except requests.exceptions.RequestException as e:
+            print(f"[warn] get_all_usdt_pairs: {url} failed ({e}) - trying next endpoint")
+            continue
         if resp.status_code == 451:
             futures = False  # try the sibling before giving up
             continue
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except requests.exceptions.HTTPError as e:
+            print(f"[warn] get_all_usdt_pairs: {url} returned {resp.status_code} ({e}) - trying next endpoint")
+            continue
         symbols = resp.json()["symbols"]
         return [
             s["symbol"] for s in symbols

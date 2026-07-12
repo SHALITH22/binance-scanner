@@ -281,6 +281,7 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
 
 def main():
     cfg = load_config()
+    used_pair_discovery_fallback = False
     if cfg["scan_all"]:
         pairs = get_all_usdt_pairs()
         if not pairs:
@@ -292,6 +293,7 @@ def main():
             # started reporting total_pairs, which is how this was found.
             print("[warn] could not fetch full USDT pair list this run - falling back to static pairs list")
             pairs = cfg["pairs"]
+            used_pair_discovery_fallback = True
     elif cfg.get("pairs_mode") == "top_volume":
         # Refetched fresh on every run (not cached/daily) - which coins are
         # liquid enough to scan shifts constantly, so this must be as
@@ -424,6 +426,11 @@ def main():
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "total_pairs": len(pairs),
         "pairs_with_errors": len(pair_health),
+        # True when full pair discovery (scan_all) failed this run and we fell
+        # back to the small static list - distinguishes "everything's fine,
+        # few/no errors" from "discovery itself broke, only scanned a handful
+        # of pairs", which otherwise look identical in pairs_with_errors alone.
+        "used_pair_discovery_fallback": used_pair_discovery_fallback,
         "errors": pair_health,
     }, indent=2))
     if pair_health:
