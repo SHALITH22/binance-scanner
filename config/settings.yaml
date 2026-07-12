@@ -24,7 +24,7 @@
 #   via live exchangeInfo (~530 pairs; same GitHub Actions block as above).
 scan_all: false
 pairs_mode: top_volume_lightweight
-top_n_pairs: 100
+top_n_pairs: 157
 
 # Long-tail coverage: the ~371 real Binance USDT perpetuals NOT on
 # Binance.US (crypto_universe.json minus the `pairs:` list below), scanned
@@ -33,11 +33,25 @@ top_n_pairs: 100
 # Reduced timeframes here (not the full `timeframes:` list further down)
 # to stay inside the proxy's free-tier request budget: at 20-min cadence,
 # ~371 pairs x 2 timeframes ~= 80k requests/day, under Cloudflare Workers'
-# 100k/day free cap. No-op if BINANCE_PROXY_URL isn't set (long-tail pairs
-# just get "no_data" errors, same as before this feature existed) or if
-# enabled: false.
+# 100k/day free cap.
+#
+# DISABLED 2026-07-12: tested end-to-end via a deployed Cloudflare Worker
+# (binance-fapi-proxy.s17001360.workers.dev) with the correct secret -
+# 0/1284 requests succeeded, every single one rejected with a CloudFront-
+# branded 403 (see scanner.data.get_proxy_stats, written to
+# scan_health.json's proxy_stats field: {"attempts": 1284, "successes": 0,
+# "last_status": 403}). Root-path and disallowed-path requests to the SAME
+# Worker succeeded fine, proving the Worker itself was reachable and
+# correctly deployed - only requests that trigger the Worker's OWN
+# outbound fetch to fapi.binance.com failed, and identically from two
+# completely different networks (this session's sandbox AND GitHub
+# Actions' Azure IPs). This points to Binance's own CDN (also fronted by
+# CloudFront) blocklisting Cloudflare Workers' shared egress IP range
+# outright, the same way it already blocks GitHub Actions' - not
+# something fixable in our code. Left in place (not deleted) in case
+# Binance's blocklist ever changes; re-enable by setting enabled: true.
 long_tail:
-  enabled: true
+  enabled: false
   timeframes:
     - 4h
     - 1d
@@ -45,16 +59,15 @@ long_tail:
 # Last-resort fallback only - used if even the lightweight ticker/24hr call
 # fails (e.g. a genuine full binance.com outage, not just the GitHub
 # Actions IP block that top_volume_lightweight already routes around).
-# CURATED 2026-07-12: restricted to symbols also listed on Binance.US
-# (get_klines' fallback exchange when binance.com is blocked - see
-# scanner/data.py module docstring). The original top-100-by-volume list
-# included several real, high-volume Binance pairs (EVAAUSDT, LABUSDT,
-# TAGUSDT, etc.) that are NOT on Binance.US, so even the klines fallback
-# couldn't reach them from GitHub Actions - 46/100 pairs failed with
-# "no data" in the run that first used the uncurated list. This list
-# trades a handful of Binance-only high-volume coins for pairs that
-# actually resolve from GitHub Actions - see scripts/refresh_universe.py
-# to regenerate (it now performs this same Binance.US intersection).
+# CURATED + EXPANDED 2026-07-12: restricted to all 157 symbols also listed
+# on Binance.US (get_klines' fallback exchange when binance.com is blocked
+# - see scanner/data.py module docstring), not just the top 100 by volume.
+# The long-tail proxy (see long_tail above) was meant to cover the
+# remaining ~371 pairs but hit a hard wall (Binance blocklisting the
+# proxy's own IPs) - this is the practical ceiling for a free, always-on
+# GitHub-Actions-hosted scan: every pair below is verified reachable.
+# See scripts/refresh_universe.py to regenerate (performs the same
+# Binance.US intersection, now without the top-100 cutoff).
 pairs:
   - ETHUSDT
   - BTCUSDT
@@ -156,6 +169,63 @@ pairs:
   - IMXUSDT
   - MEUSDT
   - CELOUSDT
+  - POPCATUSDT
+  - 1INCHUSDT
+  - DUSKUSDT
+  - WAXPUSDT
+  - BANDUSDT
+  - GRTUSDT
+  - BRETTUSDT
+  - SUSHIUSDT
+  - ORCAUSDT
+  - NMRUSDT
+  - LPTUSDT
+  - METISUSDT
+  - XTZUSDT
+  - ROSEUSDT
+  - GUSDT
+  - NEOUSDT
+  - SLPUSDT
+  - PROMUSDT
+  - LAYERUSDT
+  - ANIMEUSDT
+  - ACHUSDT
+  - AIXBTUSDT
+  - RLCUSDT
+  - FLUXUSDT
+  - ONTUSDT
+  - ASTRUSDT
+  - QTUMUSDT
+  - GASUSDT
+  - KAVAUSDT
+  - IOTXUSDT
+  - DOODUSDT
+  - KSMUSDT
+  - MAGICUSDT
+  - IOSTUSDT
+  - FLOWUSDT
+  - ONEUSDT
+  - BATUSDT
+  - ONGUSDT
+  - GTCUSDT
+  - GLMUSDT
+  - VTHOUSDT
+  - CTSIUSDT
+  - TWTUSDT
+  - COTIUSDT
+  - POLYXUSDT
+  - SANTOSUSDT
+  - TOSHIUSDT
+  - KNCUSDT
+  - ZRXUSDT
+  - BMTUSDT
+  - LSKUSDT
+  - MEWUSDT
+  - ILVUSDT
+  - BNTUSDT
+  - ALPINEUSDT
+  - DIAUSDT
+  - CELRUSDT
 
 # Timeframes to analyze (Binance kline intervals)
 timeframes:
