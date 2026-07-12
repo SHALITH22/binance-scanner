@@ -38,13 +38,25 @@ def _append(entry: dict, path: Path = JOURNAL_PATH) -> None:
         f.write(json.dumps(entry) + "\n")
 
 
-def log_signals(report: dict, cfg: dict, path: Path = JOURNAL_PATH) -> list[dict]:
+def log_signals(report: dict, cfg: dict, path: Path = JOURNAL_PATH,
+                reopen_cooldown_hours: float = 6.0) -> list[dict]:
     """
     Log every setup meeting min_confluence. Skips symbol/timeframe/pattern
     combos that already have an unresolved ("open") journal entry - without
     this, a persistent state signal (e.g. ema_stack, which fires on every
     run while the trend holds) would spam a fresh row every single scan
     instead of one row per real occurrence.
+
+    Also skips combos whose most recent entry (any status) resolved within
+    reopen_cooldown_hours. Without this, a persistent signal that JUST
+    resolved (win/loss/expired) but is still geometrically true on the very
+    next scan re-opens instantly - in practice this looked like the same
+    symbol/detector alerting every scan cycle (e.g. ARBUSDT qqe_cross,
+    ETHUSDT ema_stack firing every ~8-20 min back-to-back), which is really
+    one persistent condition being counted as many separate "trades" rather
+    than a genuinely new occurrence. This does not affect backtest scripts
+    (they use their own blocked_until logic operating on horizon_candles,
+    not wall-clock time) - it only governs the live journal.
 
     Returns the list of entries newly appended this run (not just a count) -
     callers use this to know exactly which setups are genuinely new, e.g.
@@ -54,8 +66,17 @@ def log_signals(report: dict, cfg: dict, path: Path = JOURNAL_PATH) -> list[dict
     min_conf = cfg["output"]["min_confluence"]
     existing = _load(path)
     open_keys = {(e["symbol"], e["timeframe"], e["based_on"]) for e in existing if e["status"] == "open"}
+    now_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+    last_resolved_at: dict[tuple, datetime] = {}
+    for e in existing:
+        if e["status"] == "open":
+            continue
+        key = (e["symbol"], e["timeframe"], e["based_on"])
+        resolved_at = datetime.fromisoformat(e["checked_at"] or e["logged_at"])
+        if key not in last_resolved_at or resolved_at > last_resolved_at[key]:
+            last_resolved_at[key] = resolved_at
     next_id = max((e["id"] for e in existing), default=0) + 1
-    now = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
+    now = now_dt.isoformat()
 
     logged = []
     for res in report["results"]:
@@ -66,6 +87,11 @@ def log_signals(report: dict, cfg: dict, path: Path = JOURNAL_PATH) -> list[dict
             key = (res["symbol"], tf, r["based_on"])
             if key in open_keys:
                 continue
+            last_resolved = last_resolved_at.get(key)
+            if last_resolved is not None:
+                cooldown_elapsed = (now_dt - last_resolved).total_seconds() / 3600
+                if cooldown_elapsed < reopen_cooldown_hours:
+                    continue
             entry = {
                 "id": next_id,
                 "logged_at": now,

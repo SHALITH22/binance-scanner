@@ -393,7 +393,8 @@ def main():
 
     new_keys = None
     if cfg.get("journal", {}).get("enabled", True):
-        logged = log_signals(report, cfg)
+        reopen_cooldown = cfg.get("journal", {}).get("reopen_cooldown_hours", 6.0)
+        logged = log_signals(report, cfg, reopen_cooldown_hours=reopen_cooldown)
         if logged:
             print(f"Logged {len(logged)} new setup(s) to journal.jsonl")
         # Only these are genuinely new setups this run - notify_report uses

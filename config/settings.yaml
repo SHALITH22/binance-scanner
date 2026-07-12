@@ -237,6 +237,13 @@ journal:
   # as its "recent form" in alerts - surfaces a current losing streak so
   # you don't act on a detector's backtested average as if it still applies.
   form_lookback: 5
+  # Minimum wall-clock hours after a symbol/timeframe/detector setup
+  # resolves (win/loss/expired) before it's allowed to open a fresh entry
+  # again. Without this, a persistent condition (e.g. ema_stack holding
+  # through an uptrend) re-opens the instant it resolves, which looked
+  # live as the same pair/detector alerting every scan cycle back-to-back
+  # (e.g. ARBUSDT qqe_cross, ETHUSDT ema_stack firing every ~8-20 min).
+  reopen_cooldown_hours: 6.0
 
 # --- Output ---
 output:
