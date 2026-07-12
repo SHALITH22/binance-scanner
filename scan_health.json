@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-12T15:54:05.812168+00:00",
+  "generated_at": "2026-07-12T15:58:31.912551+00:00",
   "total_pairs": 528,
   "fast_pairs": 100,
   "long_tail_pairs": 428,
@@ -7,7 +7,7 @@
   "used_pair_discovery_fallback": true,
   "pair_discovery_method": "static_fallback",
   "errors": {
-    "1000000BOBUSDT": [
+    "0GUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -17,7 +17,7 @@
         "reason": "no_data"
       }
     ],
-    "0GUSDT": [
+    "1000000BOBUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -47,16 +47,6 @@
         "reason": "no_data"
       }
     ],
-    "1000CHEEMSUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "1000CATUSDT": [
       {
         "timeframe": "4h",
@@ -67,7 +57,7 @@
         "reason": "no_data"
       }
     ],
-    "1000LUNCUSDT": [
+    "1000CHEEMSUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -78,6 +68,16 @@
       }
     ],
     "1000FLOKIUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "1000LUNCUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -107,6 +107,16 @@
         "reason": "no_data"
       }
     ],
+    "1000RATSUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "1000SHIBUSDT": [
       {
         "timeframe": "4h",
@@ -118,16 +128,6 @@
       }
     ],
     "1000XECUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "1000RATSUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -197,6 +197,16 @@
         "reason": "no_data"
       }
     ],
+    "AEROUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "ACXUSDT": [
       {
         "timeframe": "4h",
@@ -217,7 +227,7 @@
         "reason": "no_data"
       }
     ],
-    "AEROUSDT": [
+    "AGLDUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -228,16 +238,6 @@
       }
     ],
     "AEVOUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "AGLDUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -277,6 +277,16 @@
         "reason": "no_data"
       }
     ],
+    "AIOTUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "AINUSDT": [
       {
         "timeframe": "4h",
@@ -288,16 +298,6 @@
       }
     ],
     "AIOUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "AIOTUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -357,16 +357,6 @@
         "reason": "no_data"
       }
     ],
-    "APRUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "ALTUSDT": [
       {
         "timeframe": "4h",
@@ -377,27 +367,17 @@
         "reason": "no_data"
       }
     ],
+    "APRUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "ARCUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "ARKUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "ARKMUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -427,7 +407,7 @@
         "reason": "no_data"
       }
     ],
-    "ARUSDT": [
+    "ARKMUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -437,7 +417,17 @@
         "reason": "no_data"
       }
     ],
-    "ARXUSDT": [
+    "ARKUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "ARUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -457,7 +447,7 @@
         "reason": "no_data"
       }
     ],
-    "AUCTIONUSDT": [
+    "ARXUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -477,16 +467,6 @@
         "reason": "no_data"
       }
     ],
-    "ATUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "AVAAIUSDT": [
       {
         "timeframe": "4h",
@@ -497,7 +477,37 @@
         "reason": "no_data"
       }
     ],
+    "AUCTIONUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "ATUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "AVAUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "AWEUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -527,16 +537,6 @@
         "reason": "no_data"
       }
     ],
-    "AWEUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "BABYUSDT": [
       {
         "timeframe": "4h",
@@ -547,7 +547,7 @@
         "reason": "no_data"
       }
     ],
-    "BANANAUSDT": [
+    "BANANAS31USDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -557,7 +557,7 @@
         "reason": "no_data"
       }
     ],
-    "BANANAS31USDT": [
+    "BANANAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -597,7 +597,7 @@
         "reason": "no_data"
       }
     ],
-    "BASUSDT": [
+    "BARDUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -607,7 +607,7 @@
         "reason": "no_data"
       }
     ],
-    "BARDUSDT": [
+    "BASUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -627,16 +627,6 @@
         "reason": "no_data"
       }
     ],
-    "BEATUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "BEAMXUSDT": [
       {
         "timeframe": "4h",
@@ -647,7 +637,27 @@
         "reason": "no_data"
       }
     ],
+    "BEATUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "BELUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "BIGTIMEUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -677,27 +687,7 @@
         "reason": "no_data"
       }
     ],
-    "BIGTIMEUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "BIOUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "BLESSUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -718,6 +708,16 @@
       }
     ],
     "BLUAIUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "BLESSUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -787,7 +787,7 @@
         "reason": "no_data"
       }
     ],
-    "BTRUSDT": [
+    "BSVUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -807,27 +807,7 @@
         "reason": "no_data"
       }
     ],
-    "BSVUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "BTWUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "BULLAUSDT": [
+    "BTRUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -847,6 +827,26 @@
         "reason": "no_data"
       }
     ],
+    "BULLAUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "BTWUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "C98USDT": [
       {
         "timeframe": "4h",
@@ -857,7 +857,7 @@
         "reason": "no_data"
       }
     ],
-    "CAPUSDT": [
+    "CATIUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -877,7 +877,7 @@
         "reason": "no_data"
       }
     ],
-    "CCUSDT": [
+    "CAPUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -887,7 +887,7 @@
         "reason": "no_data"
       }
     ],
-    "CATIUSDT": [
+    "CCUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -947,7 +947,7 @@
         "reason": "no_data"
       }
     ],
-    "CHRUSDT": [
+    "CHIPUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -957,7 +957,7 @@
         "reason": "no_data"
       }
     ],
-    "CHIPUSDT": [
+    "CHRUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1007,7 +1007,7 @@
         "reason": "no_data"
       }
     ],
-    "COOKIEUSDT": [
+    "COLLECTUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1017,7 +1017,7 @@
         "reason": "no_data"
       }
     ],
-    "COLLECTUSDT": [
+    "COOKIEUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1067,7 +1067,7 @@
         "reason": "no_data"
       }
     ],
-    "CVCUSDT": [
+    "CUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1077,7 +1077,7 @@
         "reason": "no_data"
       }
     ],
-    "CUSDT": [
+    "CVCUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1097,7 +1097,7 @@
         "reason": "no_data"
       }
     ],
-    "CYSUSDT": [
+    "CYBERUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1107,7 +1107,7 @@
         "reason": "no_data"
       }
     ],
-    "CYBERUSDT": [
+    "CYSUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1147,16 +1147,6 @@
         "reason": "no_data"
       }
     ],
-    "DOGSUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "DODOXUSDT": [
       {
         "timeframe": "4h",
@@ -1168,6 +1158,16 @@
       }
     ],
     "DOLOUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "DOGSUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1217,16 +1217,6 @@
         "reason": "no_data"
       }
     ],
-    "ELSAUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "EDGEUSDT": [
       {
         "timeframe": "4h",
@@ -1247,6 +1237,16 @@
         "reason": "no_data"
       }
     ],
+    "ELSAUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "ENSOUSDT": [
       {
         "timeframe": "4h",
@@ -1257,7 +1257,7 @@
         "reason": "no_data"
       }
     ],
-    "ERAUSDT": [
+    "EPICUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1267,7 +1267,7 @@
         "reason": "no_data"
       }
     ],
-    "EPICUSDT": [
+    "ERAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1297,7 +1297,7 @@
         "reason": "no_data"
       }
     ],
-    "ETHWUSDT": [
+    "ETHFIUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1307,7 +1307,7 @@
         "reason": "no_data"
       }
     ],
-    "ETHFIUSDT": [
+    "ETHWUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1457,7 +1457,7 @@
         "reason": "no_data"
       }
     ],
-    "GMTUSDT": [
+    "GMXUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1467,7 +1467,7 @@
         "reason": "no_data"
       }
     ],
-    "GMXUSDT": [
+    "GMTUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1537,7 +1537,7 @@
         "reason": "no_data"
       }
     ],
-    "GWEIUSDT": [
+    "GUNUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1547,7 +1547,7 @@
         "reason": "no_data"
       }
     ],
-    "GUNUSDT": [
+    "GWEIUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1627,7 +1627,7 @@
         "reason": "no_data"
       }
     ],
-    "HOLOUSDT": [
+    "HOMEUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1637,7 +1637,7 @@
         "reason": "no_data"
       }
     ],
-    "HOMEUSDT": [
+    "HOLOUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1767,16 +1767,6 @@
         "reason": "no_data"
       }
     ],
-    "JELLYJELLYUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "JCTUSDT": [
       {
         "timeframe": "4h",
@@ -1787,7 +1777,27 @@
         "reason": "no_data"
       }
     ],
+    "JELLYJELLYUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "JOEUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "KAIAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1808,16 +1818,6 @@
       }
     ],
     "KASUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "KAIAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1907,7 +1907,7 @@
         "reason": "no_data"
       }
     ],
-    "LIGHTUSDT": [
+    "LINEAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -1917,7 +1917,7 @@
         "reason": "no_data"
       }
     ],
-    "LINEAUSDT": [
+    "LIGHTUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2007,16 +2007,6 @@
         "reason": "no_data"
       }
     ],
-    "MANTRAUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "MAVIAUSDT": [
       {
         "timeframe": "4h",
@@ -2028,6 +2018,16 @@
       }
     ],
     "MAVUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "MANTRAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2267,7 +2267,7 @@
         "reason": "no_data"
       }
     ],
-    "NOTUSDT": [
+    "NXPCUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2277,7 +2277,7 @@
         "reason": "no_data"
       }
     ],
-    "NXPCUSDT": [
+    "NOTUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2367,27 +2367,17 @@
         "reason": "no_data"
       }
     ],
-    "PARTIUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "PENDLEUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "PEOPLEUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "PARTIUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2407,6 +2397,16 @@
         "reason": "no_data"
       }
     ],
+    "PENDLEUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "PHAUSDT": [
       {
         "timeframe": "4h",
@@ -2417,7 +2417,7 @@
         "reason": "no_data"
       }
     ],
-    "PIPPINUSDT": [
+    "PIEVERSEUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2427,7 +2427,7 @@
         "reason": "no_data"
       }
     ],
-    "PIEVERSEUSDT": [
+    "PIPPINUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2487,16 +2487,6 @@
         "reason": "no_data"
       }
     ],
-    "POWRUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "PRLUSDT": [
       {
         "timeframe": "4h",
@@ -2517,7 +2507,7 @@
         "reason": "no_data"
       }
     ],
-    "PROVEUSDT": [
+    "POWRUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2537,7 +2527,7 @@
         "reason": "no_data"
       }
     ],
-    "PUMPBTCUSDT": [
+    "PROVEUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2547,7 +2537,7 @@
         "reason": "no_data"
       }
     ],
-    "PYTHUSDT": [
+    "PUMPBTCUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2577,6 +2567,16 @@
         "reason": "no_data"
       }
     ],
+    "PYTHUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "RAVEUSDT": [
       {
         "timeframe": "4h",
@@ -2597,7 +2597,7 @@
         "reason": "no_data"
       }
     ],
-    "RECALLUSDT": [
+    "REDUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2607,7 +2607,7 @@
         "reason": "no_data"
       }
     ],
-    "REDUSDT": [
+    "RECALLUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2627,7 +2627,7 @@
         "reason": "no_data"
       }
     ],
-    "REUSDT": [
+    "REZUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2637,7 +2637,7 @@
         "reason": "no_data"
       }
     ],
-    "REZUSDT": [
+    "REUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2687,7 +2687,7 @@
         "reason": "no_data"
       }
     ],
-    "RSRUSDT": [
+    "RPLUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2697,7 +2697,7 @@
         "reason": "no_data"
       }
     ],
-    "RPLUSDT": [
+    "RSRUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2727,7 +2727,7 @@
         "reason": "no_data"
       }
     ],
-    "SAGAUSDT": [
+    "SAHARAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2737,7 +2737,7 @@
         "reason": "no_data"
       }
     ],
-    "SAHARAUSDT": [
+    "SAGAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2837,7 +2837,7 @@
         "reason": "no_data"
       }
     ],
-    "SKYAIUSDT": [
+    "SLXUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2847,7 +2847,7 @@
         "reason": "no_data"
       }
     ],
-    "SLXUSDT": [
+    "SKYAIUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2867,7 +2867,7 @@
         "reason": "no_data"
       }
     ],
-    "SONICUSDT": [
+    "SOMIUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2877,7 +2877,7 @@
         "reason": "no_data"
       }
     ],
-    "SOMIUSDT": [
+    "SONICUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2927,16 +2927,6 @@
         "reason": "no_data"
       }
     ],
-    "SQDUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "SPORTFUNUSDT": [
       {
         "timeframe": "4h",
@@ -2957,7 +2947,7 @@
         "reason": "no_data"
       }
     ],
-    "STARUSDT": [
+    "SQDUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2968,6 +2958,16 @@
       }
     ],
     "STABLEUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "STARUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -2997,7 +2997,7 @@
         "reason": "no_data"
       }
     ],
-    "STOUSDT": [
+    "STRKUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3007,7 +3007,7 @@
         "reason": "no_data"
       }
     ],
-    "STRKUSDT": [
+    "STOUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3047,6 +3047,16 @@
         "reason": "no_data"
       }
     ],
+    "SWARMSUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "SXTUSDT": [
       {
         "timeframe": "4h",
@@ -3058,26 +3068,6 @@
       }
     ],
     "SYNUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "SWARMSUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "TACUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3107,6 +3097,16 @@
         "reason": "no_data"
       }
     ],
+    "TACUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "TAIKOUSDT": [
       {
         "timeframe": "4h",
@@ -3117,27 +3117,17 @@
         "reason": "no_data"
       }
     ],
-    "TAOUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "TAUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "TAKEUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "TAOUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3158,6 +3148,16 @@
       }
     ],
     "TNSRUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "TAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3207,6 +3207,16 @@
         "reason": "no_data"
       }
     ],
+    "TRUTHUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "TRIAUSDT": [
       {
         "timeframe": "4h",
@@ -3218,16 +3228,6 @@
       }
     ],
     "TRUSTUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "TRUTHUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3267,7 +3267,7 @@
         "reason": "no_data"
       }
     ],
-    "UAIUSDT": [
+    "UBUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3277,7 +3277,7 @@
         "reason": "no_data"
       }
     ],
-    "UBUSDT": [
+    "UAIUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3307,7 +3307,7 @@
         "reason": "no_data"
       }
     ],
-    "USUALUSDT": [
+    "USUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3317,7 +3317,7 @@
         "reason": "no_data"
       }
     ],
-    "USUSDT": [
+    "USUALUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3347,7 +3347,7 @@
         "reason": "no_data"
       }
     ],
-    "VELVETUSDT": [
+    "VELODROMEUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3357,7 +3357,7 @@
         "reason": "no_data"
       }
     ],
-    "VELODROMEUSDT": [
+    "VELVETUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3417,7 +3417,7 @@
         "reason": "no_data"
       }
     ],
-    "WOOUSDT": [
+    "WUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3427,7 +3427,7 @@
         "reason": "no_data"
       }
     ],
-    "WUSDT": [
+    "WOOUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3477,26 +3477,6 @@
         "reason": "no_data"
       }
     ],
-    "XPINUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
-    "XPLUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "XNYUSDT": [
       {
         "timeframe": "4h",
@@ -3507,7 +3487,7 @@
         "reason": "no_data"
       }
     ],
-    "XVSUSDT": [
+    "XPINUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3527,7 +3507,27 @@
         "reason": "no_data"
       }
     ],
+    "XPLUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
     "YBUSDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "XVSUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3577,7 +3577,7 @@
         "reason": "no_data"
       }
     ],
-    "ZETAUSDT": [
+    "ZESTUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3587,7 +3587,7 @@
         "reason": "no_data"
       }
     ],
-    "ZESTUSDT": [
+    "ZETAUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3617,16 +3617,6 @@
         "reason": "no_data"
       }
     ],
-    "ZROUSDT": [
-      {
-        "timeframe": "4h",
-        "reason": "no_data"
-      },
-      {
-        "timeframe": "1d",
-        "reason": "no_data"
-      }
-    ],
     "ZKUSDT": [
       {
         "timeframe": "4h",
@@ -3647,7 +3637,7 @@
         "reason": "no_data"
       }
     ],
-    "\u5e01\u5b89\u4eba\u751fUSDT": [
+    "ZROUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
@@ -3658,6 +3648,16 @@
       }
     ],
     "\u6211\u8e0f\u9a6c\u6765\u4e86USDT": [
+      {
+        "timeframe": "4h",
+        "reason": "no_data"
+      },
+      {
+        "timeframe": "1d",
+        "reason": "no_data"
+      }
+    ],
+    "\u5e01\u5b89\u4eba\u751fUSDT": [
       {
         "timeframe": "4h",
         "reason": "no_data"
