@@ -60,7 +60,7 @@ jobs:
           git config merge.journal-merge.name "journal.jsonl/failed_trades.jsonl content-aware merge"
           git config merge.journal-merge.driver "python scripts/merge_journal.py %O %A %B"
           touch journal.jsonl failed_trades.jsonl
-          git add journal.jsonl failed_trades.jsonl
+          git add journal.jsonl failed_trades.jsonl scan_health.json
           git diff --cached --quiet || git commit -m "Update journal [skip ci]"
           # Retry a few times in case another run's push lands in the
           # narrow window between our pull and our push.

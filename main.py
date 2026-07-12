@@ -203,7 +203,7 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
              btc_trend: dict | None = None, eth_trend: dict | None = None,
              win_rates: dict | None = None) -> dict:
     win_rates = win_rates or {}
-    result = {"symbol": symbol, "timeframes": {}}
+    result = {"symbol": symbol, "timeframes": {}, "errors": []}
     # One live-price call shared across all timeframes for this symbol - the
     # closed candle's close can be up to a full candle-period stale (up to
     # 24h on 1d), so alerts quote this instead for entry/display, while
@@ -219,6 +219,7 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
         if df is None or len(df) < 60:
             if df is None:
                 print(f"  [skip] {symbol} {tf}: no data (bad symbol or API error)")
+                result["errors"].append({"timeframe": tf, "reason": "no_data"})
             continue
         df = enrich(df, cfg)
         signals = run_all_detectors(df, cfg)
@@ -350,11 +351,25 @@ def main():
             print(f"  [error] {symbol}: {e}")
             return symbol, None
 
+    # Per-symbol health, captured independently of whether the symbol
+    # produced any tradeable setup - a symbol failing on every timeframe
+    # (e.g. delisted/bad ticker) previously vanished silently here (the
+    # `not res["timeframes"]` skip below), so its errors never reached
+    # anyone. This is what the PWA dashboard's "Pair Health Status" panel
+    # reads (scan_health.json), so it needs every symbol's outcome, not
+    # just the ones that happened to produce a signal.
+    pair_health: dict[str, list[dict]] = {}
+
     with ThreadPoolExecutor(max_workers=concurrency) as executor:
         futures = [executor.submit(_scan, symbol) for symbol in pairs]
         for future in as_completed(futures):
             symbol, res = future.result()
-            if not res or not res["timeframes"]:
+            if res is None:
+                pair_health[symbol] = [{"timeframe": "*", "reason": "exception"}]
+                continue
+            if res.get("errors"):
+                pair_health[symbol] = res["errors"]
+            if not res["timeframes"]:
                 continue
             res = annotate_htf(res, timeframes)
             res["max_strength"] = max(d["strength"] for d in res["timeframes"].values())
@@ -390,6 +405,20 @@ def main():
         out = Path(__file__).parent / cfg["output"]["json_path"]
         out.write_text(json.dumps(report, indent=2, default=str))
         print(f"\nFull report written to {out}")
+
+    # Overwritten every run (not append-only like journal.jsonl) - this is
+    # current pair health, not a history, so a symbol that comes back
+    # healthy next run should stop showing as errored. Public/token-free so
+    # the PWA dashboard can read it straight off raw.githubusercontent.com.
+    health_path = Path(__file__).parent / "scan_health.json"
+    health_path.write_text(json.dumps({
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "total_pairs": len(pairs),
+        "pairs_with_errors": len(pair_health),
+        "errors": pair_health,
+    }, indent=2))
+    if pair_health:
+        print(f"\n{len(pair_health)}/{len(pairs)} pairs had errors this run - see scan_health.json")
 
     new_keys = None
     if cfg.get("journal", {}).get("enabled", True):
