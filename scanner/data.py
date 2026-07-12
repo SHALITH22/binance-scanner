@@ -10,8 +10,21 @@ every single request came back 451. Binance.US is a separate platform
 built for US users and serves the same public kline format, so it's used
 as a fallback when binance.com is geo-blocked. Locally (non-US IPs) the
 binance.com endpoints work directly and Binance.US is never touched.
+
+Binance.US only covers ~157 of our ~528 real Binance USDT perpetuals, so
+that fallback alone can't reach the remaining ~371 ("long-tail") symbols
+from GitHub Actions at all. BINANCE_PROXY_URL (set via env var, see
+.github/workflows/scan.yml) routes those specific calls through a small
+Cloudflare Worker relay instead, which fetches from binance.com using
+Cloudflare's edge IPs (not blocked the same way). Opt-in per call
+(use_proxy=True) rather than global, because the proxy has a real request
+budget (Cloudflare's free tier caps at 100k/day) - only the long-tail
+pairs that genuinely need it should route through it; the 157
+Binance.US-covered pairs keep using the existing free, unlimited direct
+path.
 """
 
+import os
 import time
 import requests
 import pandas as pd
@@ -19,6 +32,24 @@ import pandas as pd
 BASE_URL = "https://api.binance.com"
 FUTURES_URL = "https://fapi.binance.com"
 US_URL = "https://api.binance.us"
+PROXY_URL = os.environ.get("BINANCE_PROXY_URL", "").rstrip("/")
+PROXY_SECRET = os.environ.get("BINANCE_PROXY_SECRET")
+
+
+def _proxy_get(path: str, params: dict, timeout: int) -> requests.Response | None:
+    """
+    Single attempt through the Cloudflare Worker proxy. Returns None (never
+    raises) on any failure - callers fall through to the normal direct/
+    Binance.US chain, so a proxy outage degrades gracefully instead of
+    breaking the whole run.
+    """
+    if not PROXY_URL:
+        return None
+    headers = {"X-Proxy-Secret": PROXY_SECRET} if PROXY_SECRET else {}
+    try:
+        return requests.get(f"{PROXY_URL}{path}", params=params, headers=headers, timeout=timeout)
+    except requests.exceptions.RequestException:
+        return None
 
 KLINE_COLUMNS = [
     "open_time", "open", "high", "low", "close", "volume",
@@ -179,14 +210,23 @@ def get_top_pairs_by_volume_lightweight(n: int = 100, universe: set[str] | None 
     return [t["symbol"] for t in rows[:n]]
 
 
-def get_current_price(symbol: str, futures: bool = True) -> float | None:
+def get_current_price(symbol: str, futures: bool = True, use_proxy: bool = False) -> float | None:
     """
     Live current price - separate from get_klines, which always drops the
     still-forming candle (correct for pattern detection, but its "close"
     can be up to a full candle-period stale - up to 24h on a 1d timeframe).
     Alerts should quote this for the entry/display price, not the closed
     candle's close, so the number shown actually matches the market.
+
+    use_proxy=True: see get_klines' docstring - same rationale, tries the
+    Cloudflare Worker proxy first for long-tail symbols before falling
+    through to the normal chain.
     """
+    if use_proxy:
+        resp = _proxy_get("/fapi/v1/ticker/price", {"symbol": symbol}, timeout=10)
+        if resp is not None and resp.ok:
+            return float(resp.json()["price"])
+
     for url in _endpoint_chain(futures, "ticker/price"):
         resp = requests.get(url, params={"symbol": symbol}, timeout=10)
         if resp.status_code == 451:
@@ -270,8 +310,21 @@ def get_long_short_ratio(symbol: str, period: str = "4h", limit: int = 180,
         return None
 
 
+def _klines_response_to_df(data: list) -> pd.DataFrame | None:
+    if not data:
+        return None
+    df = pd.DataFrame(data, columns=KLINE_COLUMNS)
+    for col in ["open", "high", "low", "close", "volume", "quote_volume"]:
+        df[col] = pd.to_numeric(df[col])
+    df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
+    df["close_time"] = pd.to_datetime(df["close_time"], unit="ms")
+    # Drop the still-forming candle: only closed candles are valid for signals
+    return df.iloc[:-1].reset_index(drop=True)
+
+
 def get_klines(symbol: str, interval: str, limit: int = 300,
-               futures: bool = True, max_retries: int = 3) -> pd.DataFrame | None:
+               futures: bool = True, max_retries: int = 3,
+               use_proxy: bool = False) -> pd.DataFrame | None:
     """
     Fetch OHLCV candles for a symbol/interval.
     Tries the requested endpoint first (futures by default); on a 451
@@ -279,8 +332,22 @@ def get_klines(symbol: str, interval: str, limit: int = 300,
     immediately instead of wasting retries on a domain that will never
     succeed for this IP. See module docstring for the fallback chain.
     Returns a DataFrame with numeric columns, or None on failure.
+
+    use_proxy=True tries the Cloudflare Worker proxy (BINANCE_PROXY_URL)
+    FIRST, before the normal chain - for long-tail symbols not on
+    Binance.US, the direct chain will always 451/fail anyway, so trying
+    the proxy first avoids wasting those requests. Falls through to the
+    normal chain if the proxy is unconfigured or fails, so a proxy outage
+    degrades gracefully rather than losing the symbol entirely.
     """
     params = {"symbol": symbol, "interval": interval, "limit": limit}
+
+    if use_proxy:
+        resp = _proxy_get("/fapi/v1/klines", params, timeout=15)
+        if resp is not None and resp.ok:
+            df = _klines_response_to_df(resp.json())
+            if df is not None:
+                return df
 
     for url in _endpoint_chain(futures, "klines"):
         for attempt in range(max_retries):
@@ -298,17 +365,7 @@ def get_klines(symbol: str, interval: str, limit: int = 300,
                     time.sleep(wait)
                     continue
                 resp.raise_for_status()
-                data = resp.json()
-                if not data:
-                    return None
-
-                df = pd.DataFrame(data, columns=KLINE_COLUMNS)
-                for col in ["open", "high", "low", "close", "volume", "quote_volume"]:
-                    df[col] = pd.to_numeric(df[col])
-                df["open_time"] = pd.to_datetime(df["open_time"], unit="ms")
-                df["close_time"] = pd.to_datetime(df["close_time"], unit="ms")
-                # Drop the still-forming candle: only closed candles are valid for signals
-                return df.iloc[:-1].reset_index(drop=True)
+                return _klines_response_to_df(resp.json())
 
             except requests.RequestException as e:
                 if attempt == max_retries - 1:

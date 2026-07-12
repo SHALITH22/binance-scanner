@@ -40,6 +40,15 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Cloudflare Worker relay for the ~371 long-tail pairs not on
+          # Binance.US (binance.com itself 451s every GitHub Actions
+          # request - see scanner/data.py module docstring). Both optional:
+          # missing BINANCE_PROXY_URL just means long-tail pairs get
+          # "no_data" errors (same as before this feature existed), not a
+          # failed run. Set both as repo secrets - Settings -> Secrets and
+          # variables -> Actions -> New repository secret.
+          BINANCE_PROXY_URL: ${{ secrets.BINANCE_PROXY_URL }}
+          BINANCE_PROXY_SECRET: ${{ secrets.BINANCE_PROXY_SECRET }}
         run: python main.py
 
       - name: Check journal outcomes

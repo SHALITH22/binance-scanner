@@ -203,21 +203,28 @@ def get_market_trend(symbol: str, timeframes: list[str], cfg: dict) -> dict[str,
 def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
              avg_returns: dict | None = None, unreliable: set | None = None,
              btc_trend: dict | None = None, eth_trend: dict | None = None,
-             win_rates: dict | None = None) -> dict:
+             win_rates: dict | None = None, use_proxy: bool = False) -> dict:
     win_rates = win_rates or {}
     result = {"symbol": symbol, "timeframes": {}, "errors": []}
     # One live-price call shared across all timeframes for this symbol - the
     # closed candle's close can be up to a full candle-period stale (up to
     # 24h on 1d), so alerts quote this instead for entry/display, while
     # detection still correctly uses only closed candles (no lookahead).
-    live_price = get_current_price(symbol)
+    live_price = get_current_price(symbol, use_proxy=use_proxy)
     is_market_leader = symbol in ("BTCUSDT", "ETHUSDT")
-    # Funding rate is per-symbol, not per-timeframe (one perpetual contract,
-    # one funding rate) - fetched once here like live_price.
-    fr_df = get_funding_rate(symbol, limit=1)
-    current_funding = float(fr_df["fundingRate"].iloc[-1]) if fr_df is not None and not fr_df.empty else None
+    # Funding rate has no Binance.US equivalent (perpetuals-only, no spot
+    # market) and no proxy route either - skipped entirely for long-tail
+    # (use_proxy) symbols to stay inside the proxy's free-tier request
+    # budget. classify_funding(None, ...) already returns None here, which
+    # main.py's `!= "against_crowd"` check treats as funding_ok=True - the
+    # same as if funding were checked and came back neutral, not a special
+    # case needing extra code.
+    current_funding = None
+    if not use_proxy:
+        fr_df = get_funding_rate(symbol, limit=1)
+        current_funding = float(fr_df["fundingRate"].iloc[-1]) if fr_df is not None and not fr_df.empty else None
     for tf in timeframes:
-        df = get_klines(symbol, tf, cfg["candle_limit"])
+        df = get_klines(symbol, tf, cfg["candle_limit"], use_proxy=use_proxy)
         if df is None or len(df) < 60:
             if df is None:
                 print(f"  [skip] {symbol} {tf}: no data (bad symbol or API error)")
@@ -333,6 +340,23 @@ def main():
             pair_discovery_method = "static_fallback"
     else:
         pairs = cfg["pairs"]
+
+    # Long-tail: the ~371 real Binance pairs not on Binance.US, unreachable
+    # from GitHub Actions via the normal fallback chain at all (see
+    # scanner/data.py module docstring). Routed through BINANCE_PROXY_URL
+    # (a Cloudflare Worker relay) instead, on a reduced timeframe set to
+    # stay inside the proxy's free-tier request budget (~80k/day at 20-min
+    # cadence with 2 timeframes x ~371 pairs, vs. Cloudflare's 100k/day cap
+    # - see .github/workflows/scan.yml for where BINANCE_PROXY_URL is set).
+    # No-op (empty list) if crypto_universe.json is missing or long_tail is
+    # disabled - existing `pairs` coverage is unaffected either way.
+    long_tail_cfg = cfg.get("long_tail", {})
+    long_tail_pairs = []
+    long_tail_timeframes = long_tail_cfg.get("timeframes", ["4h", "1d"])
+    if long_tail_cfg.get("enabled") and CRYPTO_UNIVERSE_PATH.exists():
+        full_universe = set(json.loads(CRYPTO_UNIVERSE_PATH.read_text()))
+        long_tail_pairs = sorted(full_universe - set(pairs))
+
     timeframes = cfg["timeframes"]
     min_conf = cfg["output"]["min_confluence"]
     weights = load_detector_weights(cfg)
@@ -366,7 +390,10 @@ def main():
     btc_trend = get_market_trend("BTCUSDT", timeframes, cfg)
     eth_trend = get_market_trend("ETHUSDT", timeframes, cfg)
 
-    print(f"Scanning {len(pairs)} pairs x {len(timeframes)} timeframes...")
+    total_pair_count = len(pairs) + len(long_tail_pairs)
+    print(f"Scanning {len(pairs)} pairs x {len(timeframes)} timeframes"
+          + (f", plus {len(long_tail_pairs)} long-tail pairs x {len(long_tail_timeframes)} timeframes via proxy"
+             if long_tail_pairs else "") + "...")
     if weights:
         print(f"(strength weighted by backtested edge - {len(weights)} detector/direction weights loaded)\n")
     else:
@@ -383,10 +410,21 @@ def main():
     # so a burst of concurrent requests self-throttles rather than failing.
     concurrency = cfg.get("scan_concurrency", 8)
 
-    def _scan(symbol):
+    # (symbol, timeframes-to-scan, use_proxy) - fast pairs get the full
+    # config timeframe list direct/via-Binance.US as before; long-tail
+    # pairs get the reduced timeframe list via the proxy (see long_tail_cfg
+    # above). btc_trend/eth_trend already cover every config timeframe
+    # (fetched with the full `timeframes` list above), so annotate_htf and
+    # market_disagrees work correctly for long-tail pairs' 4h/1d too,
+    # without needing a separate fetch.
+    scan_jobs = [(s, timeframes, False) for s in pairs] + \
+                [(s, long_tail_timeframes, True) for s in long_tail_pairs]
+
+    def _scan(job):
+        symbol, tfs, use_proxy = job
         try:
-            return symbol, scan_pair(symbol, timeframes, cfg, weights, avg_returns, unreliable,
-                                     btc_trend, eth_trend, win_rates)
+            return symbol, scan_pair(symbol, tfs, cfg, weights, avg_returns, unreliable,
+                                     btc_trend, eth_trend, win_rates, use_proxy=use_proxy)
         except Exception as e:
             print(f"  [error] {symbol}: {e}")
             return symbol, None
@@ -401,7 +439,7 @@ def main():
     pair_health: dict[str, list[dict]] = {}
 
     with ThreadPoolExecutor(max_workers=concurrency) as executor:
-        futures = [executor.submit(_scan, symbol) for symbol in pairs]
+        futures = [executor.submit(_scan, job) for job in scan_jobs]
         for future in as_completed(futures):
             symbol, res = future.result()
             if res is None:
@@ -453,7 +491,9 @@ def main():
     health_path = Path(__file__).parent / "scan_health.json"
     health_path.write_text(json.dumps({
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "total_pairs": len(pairs),
+        "total_pairs": total_pair_count,
+        "fast_pairs": len(pairs),
+        "long_tail_pairs": len(long_tail_pairs),
         "pairs_with_errors": len(pair_health),
         # True when full pair discovery (scan_all) failed this run and we fell
         # back to the small static list - distinguishes "everything's fine,
@@ -464,7 +504,7 @@ def main():
         "errors": pair_health,
     }, indent=2))
     if pair_health:
-        print(f"\n{len(pair_health)}/{len(pairs)} pairs had errors this run - see scan_health.json")
+        print(f"\n{len(pair_health)}/{total_pair_count} pairs had errors this run - see scan_health.json")
 
     new_keys = None
     if cfg.get("journal", {}).get("enabled", True):
