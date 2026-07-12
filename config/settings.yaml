@@ -28,109 +28,117 @@ top_n_pairs: 100
 # Last-resort fallback only - used if even the lightweight ticker/24hr call
 # fails (e.g. a genuine full binance.com outage, not just the GitHub
 # Actions IP block that top_volume_lightweight already routes around).
-# Snapshot of the top 100 pairs by volume verified directly against global
-# Binance on 2026-07-12 (see scripts/refresh_universe.py to regenerate).
+# CURATED 2026-07-12: restricted to symbols also listed on Binance.US
+# (get_klines' fallback exchange when binance.com is blocked - see
+# scanner/data.py module docstring). The original top-100-by-volume list
+# included several real, high-volume Binance pairs (EVAAUSDT, LABUSDT,
+# TAGUSDT, etc.) that are NOT on Binance.US, so even the klines fallback
+# couldn't reach them from GitHub Actions - 46/100 pairs failed with
+# "no data" in the run that first used the uncurated list. This list
+# trades a handful of Binance-only high-volume coins for pairs that
+# actually resolve from GitHub Actions - see scripts/refresh_universe.py
+# to regenerate (it now performs this same Binance.US intersection).
 pairs:
   - ETHUSDT
   - BTCUSDT
   - SOLUSDT
-  - EVAAUSDT
   - TUSDT
   - ZECUSDT
-  - LABUSDT
   - XRPUSDT
   - HYPEUSDT
-  - SXTUSDT
   - DOGEUSDT
   - BNBUSDT
-  - DEXEUSDT
   - WLDUSDT
-  - BUSDT
   - ADAUSDT
-  - BEATUSDT
-  - 1000PEPEUSDT
   - AAVEUSDT
   - ARBUSDT
   - UNIUSDT
   - SUIUSDT
-  - VANRYUSDT
   - AVAXUSDT
-  - CLOUSDT
   - NEARUSDT
   - ENAUSDT
-  - XPINUSDT
   - LINKUSDT
-  - TAOUSDT
-  - LITUSDT
   - SKLUSDT
-  - ALLOUSDT
   - XLMUSDT
   - VIRTUALUSDT
   - BCHUSDT
-  - ARXUSDT
   - FILUSDT
   - DOTUSDT
   - TLMUSDT
-  - VELVETUSDT
-  - OUSDT
-  - EDGEUSDT
   - TRUMPUSDT
-  - MMTUSDT
-  - 1MBABYDOGEUSDT
   - ONDOUSDT
-  - BANKUSDT
-  - SYNUSDT
   - LTCUSDT
-  - GWEIUSDT
   - HBARUSDT
   - ASTERUSDT
-  - EPICUSDT
   - PUMPUSDT
   - TIAUSDT
-  - USUSDT
   - INJUSDT
-  - BILLUSDT
-  - PARTIUSDT
   - MOODENGUSDT
   - TRXUSDT
   - LDOUSDT
-  - TAGUSDT
   - KAITOUSDT
-  - XMRUSDT
-  - ETHFIUSDT
   - FARTCOINUSDT
-  - TACUSDT
   - OPUSDT
-  - SLXUSDT
   - PENGUUSDT
   - ETCUSDT
-  - 1000SHIBUSDT
-  - XPLUSDT
   - JTOUSDT
-  - REUSDT
   - FETUSDT
-  - SKYAIUSDT
   - ANKRUSDT
-  - AGLDUSDT
-  - HMSTRUSDT
-  - TRIAUSDT
   - APTUSDT
-  - CHRUSDT
-  - FHEUSDT
-  - BASEDUSDT
   - WLFIUSDT
   - SKYUSDT
-  - RIVERUSDT
   - THETAUSDT
-  - MORPHOUSDT
   - ICPUSDT
-  - 1000BONKUSDT
   - DASHUSDT
-  - RIFUSDT
   - EGLDUSDT
   - EIGENUSDT
   - PAXGUSDT
-  - VVVUSDT
+  - WIFUSDT
+  - CRVUSDT
+  - OGNUSDT
+  - CHZUSDT
+  - JUPUSDT
+  - ATOMUSDT
+  - BLURUSDT
+  - SNXUSDT
+  - GALAUSDT
+  - TURBOUSDT
+  - ALGOUSDT
+  - POLUSDT
+  - SEIUSDT
+  - CAKEUSDT
+  - RENDERUSDT
+  - APEUSDT
+  - YFIUSDT
+  - IOTAUSDT
+  - VETUSDT
+  - ZENUSDT
+  - USELESSUSDT
+  - AXSUSDT
+  - AXLUSDT
+  - SANDUSDT
+  - MANAUSDT
+  - BICOUSDT
+  - AUSDT
+  - NEIROUSDT
+  - SPXUSDT
+  - RAREUSDT
+  - RVNUSDT
+  - ZILUSDT
+  - SUSDT
+  - PNUTUSDT
+  - ENSUSDT
+  - COMPUSDT
+  - MASKUSDT
+  - AVNTUSDT
+  - API3USDT
+  - ENJUSDT
+  - ALICEUSDT
+  - STORJUSDT
+  - QNTUSDT
+  - IMXUSDT
+  - MEUSDT
+  - CELOUSDT
 
 # Timeframes to analyze (Binance kline intervals)
 timeframes:
