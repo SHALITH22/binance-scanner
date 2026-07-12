@@ -29,7 +29,8 @@ for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         _stream.reconfigure(encoding="utf-8")
 
-from scanner.data import get_klines, get_all_usdt_pairs, get_top_pairs_by_volume, get_current_price, get_funding_rate
+from scanner.data import (get_klines, get_all_usdt_pairs, get_top_pairs_by_volume,
+                          get_top_pairs_by_volume_lightweight, get_current_price, get_funding_rate)
 from scanner.indicators import enrich
 from scanner.patterns import run_all_detectors
 from scanner.mtf import annotate_htf
@@ -41,6 +42,7 @@ from scanner.regime import regime_label
 CONFIG_PATH = Path(__file__).parent / "config" / "settings.yaml"
 BACKTEST_RESULTS_PATH = Path(__file__).parent / "backtest_results.json"
 REALISTIC_BACKTEST_PATH = Path(__file__).parent / "realistic_backtest_results.json"
+CRYPTO_UNIVERSE_PATH = Path(__file__).parent / "crypto_universe.json"
 
 
 def load_realistic_backtest_expectancy(min_n: int) -> dict[tuple[str, str], tuple[float, int]]:
@@ -282,8 +284,10 @@ def scan_pair(symbol: str, timeframes: list[str], cfg: dict, weights: dict,
 def main():
     cfg = load_config()
     used_pair_discovery_fallback = False
+    pair_discovery_method = "static"
     if cfg["scan_all"]:
         pairs = get_all_usdt_pairs()
+        pair_discovery_method = "full_exchange_info"
         if not pairs:
             # get_all_usdt_pairs() returns [] on purpose when binance.com is
             # briefly unreachable (see its docstring - never silently
@@ -294,14 +298,39 @@ def main():
             print("[warn] could not fetch full USDT pair list this run - falling back to static pairs list")
             pairs = cfg["pairs"]
             used_pair_discovery_fallback = True
+            pair_discovery_method = "static_fallback"
     elif cfg.get("pairs_mode") == "top_volume":
         # Refetched fresh on every run (not cached/daily) - which coins are
         # liquid enough to scan shifts constantly, so this must be as
         # current as the scan itself, not a snapshot from hours/days ago.
         pairs = get_top_pairs_by_volume(cfg.get("top_n_pairs", 100))
+        pair_discovery_method = "top_volume"
         if not pairs:
             print("[warn] could not fetch top-volume pairs this run - falling back to static pairs list")
             pairs = cfg["pairs"]
+            used_pair_discovery_fallback = True
+            pair_discovery_method = "static_fallback"
+    elif cfg.get("pairs_mode") == "top_volume_lightweight":
+        # binance.com hard-blocks GitHub Actions' IPs entirely (see
+        # scanner/data.py module docstring) - exchangeInfo has no working
+        # fallback for GH Actions (Binance.US isn't safe to use for
+        # discovery, only for klines on symbols already known), so
+        # scan_all/top_volume return [] on every single GH Actions run.
+        # This mode ranks a live ticker/24hr call (cheap, still attempted)
+        # against a pre-built static universe (crypto_universe.json,
+        # refreshed periodically from a network that can reach binance.com
+        # - see scripts/refresh_universe.py) instead of requiring the
+        # blocked discovery call at all.
+        universe = None
+        if CRYPTO_UNIVERSE_PATH.exists():
+            universe = set(json.loads(CRYPTO_UNIVERSE_PATH.read_text()))
+        pairs = get_top_pairs_by_volume_lightweight(cfg.get("top_n_pairs", 100), universe)
+        pair_discovery_method = "top_volume_lightweight"
+        if not pairs:
+            print("[warn] could not fetch live volume ranking this run - falling back to static pairs list")
+            pairs = cfg["pairs"]
+            used_pair_discovery_fallback = True
+            pair_discovery_method = "static_fallback"
     else:
         pairs = cfg["pairs"]
     timeframes = cfg["timeframes"]
@@ -431,6 +460,7 @@ def main():
         # few/no errors" from "discovery itself broke, only scanned a handful
         # of pairs", which otherwise look identical in pairs_with_errors alone.
         "used_pair_discovery_fallback": used_pair_discovery_fallback,
+        "pair_discovery_method": pair_discovery_method,
         "errors": pair_health,
     }, indent=2))
     if pair_health:

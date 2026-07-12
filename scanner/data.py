@@ -131,6 +131,54 @@ def get_top_pairs_by_volume(n: int = 100, futures: bool = True) -> list[str]:
     return [t["symbol"] for t in rows[:n]]
 
 
+def get_top_pairs_by_volume_lightweight(n: int = 100, universe: set[str] | None = None,
+                                        futures: bool = True) -> list[str]:
+    """
+    Same ranking as get_top_pairs_by_volume, but ranks against a pre-built
+    static universe (crypto_universe.json) instead of a live exchangeInfo
+    call. This exists because binance.com hard-blocks GitHub Actions' IPs
+    entirely (see module docstring) - exchangeInfo AND ticker/24hr are both
+    binance.com-only by design (never Binance.US - a discovery source needs
+    the real global catalog, not a smaller/different one used only as a
+    last-resort klines fallback for symbols already known to scan). With no
+    working fallback, get_all_usdt_pairs()/get_top_pairs_by_volume() return
+    [] on every single GitHub Actions run - confirmed via scan_health.json
+    silently reporting total_pairs: 0 for 24+ hours before this was found.
+
+    universe should be refreshed periodically from a network that can
+    actually reach binance.com (see scripts/refresh_universe.py) - it goes
+    stale as new pairs list/delist, but that's a much smaller problem than
+    scanning zero pairs every run. Still attempts a live ticker/24hr call
+    (cheap, no live discovery dependency) for genuinely current volume
+    ranking; only the "what symbols exist" part is static. Returns []
+    if even this ticker call is blocked, same contract as the non-lightweight
+    version - the caller's existing static-pairs-list fallback still applies.
+    """
+    if not universe:
+        return []
+    ticker = None
+    for url in _endpoint_chain(futures, "ticker/24hr", include_us=False):
+        try:
+            resp = requests.get(url, timeout=15)
+        except requests.exceptions.RequestException:
+            continue
+        if resp.status_code == 451:
+            continue
+        try:
+            resp.raise_for_status()
+        except requests.exceptions.HTTPError:
+            continue
+        ticker = resp.json()
+        break
+    if not ticker:
+        return []
+
+    rows = [t for t in ticker if t["symbol"] in universe
+            and t["symbol"][:-4] not in STABLE_SYMBOLS]
+    rows.sort(key=lambda t: float(t["quoteVolume"]), reverse=True)
+    return [t["symbol"] for t in rows[:n]]
+
+
 def get_current_price(symbol: str, futures: bool = True) -> float | None:
     """
     Live current price - separate from get_klines, which always drops the

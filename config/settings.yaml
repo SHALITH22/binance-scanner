@@ -4,68 +4,133 @@
 # ============================================
 
 # Pairs to scan.
-# pairs_mode: top_volume  -> recomputed FRESH on every single scan run (not
-#   daily, not cached) from Binance's live 24h ticker data - the top
-#   `top_n_pairs` USDT perpetuals by real trading volume right now. This is
-#   the default: which coins are liquid enough to scan shifts constantly,
-#   so the list must be as current as the scan itself.
-# pairs_mode: static      -> always use the `pairs` list below verbatim.
-# scan_all: true           -> ignore pairs_mode entirely, fetch every USDT
-#   perpetual (~530 pairs, much slower, not recommended for 30-min cadence).
-scan_all: true
-pairs_mode: top_volume
+# pairs_mode: top_volume_lightweight -> DEFAULT as of 2026-07-12. Ranks a
+#   live ticker/24hr call against a pre-built static universe file
+#   (crypto_universe.json) instead of requiring live exchangeInfo
+#   discovery. Added because binance.com hard-blocks GitHub Actions' IPs
+#   ENTIRELY (confirmed - see scanner/data.py module docstring), and
+#   exchangeInfo/ticker discovery deliberately never falls back to
+#   Binance.US (a discovery source needs the real global catalog, not a
+#   smaller/different one - see get_all_usdt_pairs' docstring). Without
+#   this, scan_all/top_volume silently returned [] on every GitHub Actions
+#   run for 24+ hours before anyone noticed (scan_health.json's
+#   total_pairs was the first thing to actually surface it).
+#   crypto_universe.json must be refreshed periodically from a network
+#   that can actually reach binance.com - see scripts/refresh_universe.py.
+# pairs_mode: top_volume -> recomputed fresh from a LIVE exchangeInfo call
+#   (works locally/non-blocked networks, returns [] on GitHub Actions).
+# pairs_mode: static     -> always use the `pairs` list below verbatim.
+# scan_all: true          -> ignore pairs_mode, fetch every USDT perpetual
+#   via live exchangeInfo (~530 pairs; same GitHub Actions block as above).
+scan_all: false
+pairs_mode: top_volume_lightweight
 top_n_pairs: 100
-# Fallback only - used if a live top-volume fetch fails, e.g. when
-# binance.com is unreachable from a geo-blocked cloud IP (GitHub Actions).
-# In that case pair-discovery correctly returns empty rather than silently
-# substituting Binance.US's different symbol catalog (see scanner/data.py -
-# that's what caused LMWRUSDT, a Binance.US-only symbol, to show up in an
-# alert even though it doesn't exist on real/global Binance). This list is
-# a snapshot of the top pairs by volume verified directly against global
-# Binance, so cloud runs still get meaningful coverage instead of dropping
-# to just 4 coins when the live fetch can't reach binance.com at all.
+# Last-resort fallback only - used if even the lightweight ticker/24hr call
+# fails (e.g. a genuine full binance.com outage, not just the GitHub
+# Actions IP block that top_volume_lightweight already routes around).
+# Snapshot of the top 100 pairs by volume verified directly against global
+# Binance on 2026-07-12 (see scripts/refresh_universe.py to regenerate).
 pairs:
-  - BTCUSDT
   - ETHUSDT
+  - BTCUSDT
   - SOLUSDT
-  - LABUSDT
-  - ZECUSDT
   - EVAAUSDT
-  - HYPEUSDT
+  - TUSDT
+  - ZECUSDT
+  - LABUSDT
   - XRPUSDT
-  - TAGUSDT
+  - HYPEUSDT
+  - SXTUSDT
   - DOGEUSDT
   - BNBUSDT
-  - POWERUSDT
-  - VANRYUSDT
-  - EDGEUSDT
-  - SKYAIUSDT
+  - DEXEUSDT
   - WLDUSDT
+  - BUSDT
   - ADAUSDT
-  - ARBUSDT
+  - BEATUSDT
   - 1000PEPEUSDT
-  - NEARUSDT
+  - AAVEUSDT
+  - ARBUSDT
   - UNIUSDT
   - SUIUSDT
-  - ESPORTSUSDT
+  - VANRYUSDT
   - AVAXUSDT
-  - AAVEUSDT
-  - PAXGUSDT
-  - THEUSDT
-  - LITUSDT
+  - CLOUSDT
+  - NEARUSDT
   - ENAUSDT
+  - XPINUSDT
   - LINKUSDT
-  - BASEDUSDT
-  - SLXUSDT
-  - OUSDT
-  - OGNUSDT
-  - TACUSDT
   - TAOUSDT
+  - LITUSDT
+  - SKLUSDT
   - ALLOUSDT
-  - SENTUSDT
   - XLMUSDT
+  - VIRTUALUSDT
+  - BCHUSDT
+  - ARXUSDT
   - FILUSDT
-  # - FOLKSUSDT   # NOT a valid Binance pair (verified 2026-07-09) - did you mean FLOKIUSDT?
+  - DOTUSDT
+  - TLMUSDT
+  - VELVETUSDT
+  - OUSDT
+  - EDGEUSDT
+  - TRUMPUSDT
+  - MMTUSDT
+  - 1MBABYDOGEUSDT
+  - ONDOUSDT
+  - BANKUSDT
+  - SYNUSDT
+  - LTCUSDT
+  - GWEIUSDT
+  - HBARUSDT
+  - ASTERUSDT
+  - EPICUSDT
+  - PUMPUSDT
+  - TIAUSDT
+  - USUSDT
+  - INJUSDT
+  - BILLUSDT
+  - PARTIUSDT
+  - MOODENGUSDT
+  - TRXUSDT
+  - LDOUSDT
+  - TAGUSDT
+  - KAITOUSDT
+  - XMRUSDT
+  - ETHFIUSDT
+  - FARTCOINUSDT
+  - TACUSDT
+  - OPUSDT
+  - SLXUSDT
+  - PENGUUSDT
+  - ETCUSDT
+  - 1000SHIBUSDT
+  - XPLUSDT
+  - JTOUSDT
+  - REUSDT
+  - FETUSDT
+  - SKYAIUSDT
+  - ANKRUSDT
+  - AGLDUSDT
+  - HMSTRUSDT
+  - TRIAUSDT
+  - APTUSDT
+  - CHRUSDT
+  - FHEUSDT
+  - BASEDUSDT
+  - WLFIUSDT
+  - SKYUSDT
+  - RIVERUSDT
+  - THETAUSDT
+  - MORPHOUSDT
+  - ICPUSDT
+  - 1000BONKUSDT
+  - DASHUSDT
+  - RIFUSDT
+  - EGLDUSDT
+  - EIGENUSDT
+  - PAXGUSDT
+  - VVVUSDT
 
 # Timeframes to analyze (Binance kline intervals)
 timeframes:
