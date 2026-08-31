@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-08-31T00:54:17.851969+00:00",
+  "generated_at": "2026-08-31T06:56:10.152988+00:00",
   "total_pairs": 157,
   "fast_pairs": 157,
   "long_tail_pairs": 0,
-  "pairs_with_errors": 0,
-  "used_pair_discovery_fallback": false,
-  "pair_discovery_method": "top_volume_lightweight",
+  "pairs_with_errors": 157,
+  "used_pair_discovery_fallback": true,
+  "pair_discovery_method": "static_fallback",
   "proxy_stats": {
     "configured": false,
     "attempts": 0,
@@ -13,5 +13,948 @@
     "last_status": null,
     "last_error": null
   },
-  "errors": {}
+  "errors": {
+    "BTCUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ETHUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SOLUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ZECUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "XRPUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "HYPEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "TUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "DOGEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "BNBUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ADAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "WLDUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ARBUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "AAVEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SUIUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "NEARUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "UNIUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ENAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "AVAXUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "LINKUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SKLUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "XLMUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "VIRTUALUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "FILUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "BCHUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "TLMUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "DOTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "LTCUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "TRUMPUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "HBARUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ONDOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "TIAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "PUMPUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ASTERUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "INJUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "TRXUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "MOODENGUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "LDOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "KAITOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "OPUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "FARTCOINUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "PENGUUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ETCUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "JTOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "FETUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ANKRUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "APTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SKYUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "WLFIUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "THETAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "EIGENUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "EGLDUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "PAXGUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "DASHUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ICPUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "WIFUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "OGNUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "CRVUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "CHZUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "JUPUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ATOMUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SNXUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "BLURUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "GALAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "CAKEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "TURBOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "RENDERUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "POLUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SEIUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ALGOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "APEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "YFIUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "VETUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ZENUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "IOTAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "AXSUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "AXLUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "MANAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "USELESSUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SANDUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "NEIROUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "BICOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SPXUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "AUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "RVNUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "RAREUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ZILUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "PNUTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "API3USDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "MASKUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "AVNTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ENJUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "COMPUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ALICEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ENSUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "STORJUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "QNTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "MEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "IMXUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "CELOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "DUSKUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "1INCHUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "POPCATUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "WAXPUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "BANDUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "BRETTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "GRTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SUSHIUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ORCAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "LPTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "NMRUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "XTZUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "METISUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ROSEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "GUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "NEOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "LAYERUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ACHUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SLPUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ANIMEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "PROMUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "RLCUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "AIXBTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "FLUXUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ONTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "QTUMUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ASTRUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "KAVAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "DOODUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "GASUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "IOTXUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "KSMUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "MAGICUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "FLOWUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "IOSTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "GTCUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "BATUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ONEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "GLMUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ONGUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "TOSHIUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "SANTOSUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "COTIUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "CTSIUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "KNCUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "VTHOUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "POLYXUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "TWTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ZRXUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "MEWUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ILVUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "LSKUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "BMTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "BNTUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "DIAUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "ALPINEUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ],
+    "CELRUSDT": [
+      {
+        "timeframe": "*",
+        "reason": "exception"
+      }
+    ]
+  }
 }
