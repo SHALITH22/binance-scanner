@@ -1,9 +1,9 @@
 {
-  "generated_at": "2026-09-10T06:08:49.863743+00:00",
+  "generated_at": "2026-09-10T11:35:17.848090+00:00",
   "total_pairs": 157,
   "fast_pairs": 157,
   "long_tail_pairs": 0,
-  "pairs_with_errors": 12,
+  "pairs_with_errors": 9,
   "used_pair_discovery_fallback": true,
   "pair_discovery_method": "static_fallback",
   "proxy_stats": {
@@ -14,73 +14,55 @@
     "last_error": null
   },
   "errors": {
-    "VIRTUALUSDT": [
+    "BTCUSDT": [
       {
         "timeframe": "*",
         "reason": "exception"
       }
     ],
-    "DASHUSDT": [
+    "AAVEUSDT": [
       {
         "timeframe": "*",
         "reason": "exception"
       }
     ],
-    "ALGOUSDT": [
+    "ENAUSDT": [
       {
         "timeframe": "*",
         "reason": "exception"
       }
     ],
-    "IOTAUSDT": [
+    "LTCUSDT": [
       {
         "timeframe": "*",
         "reason": "exception"
       }
     ],
-    "RAREUSDT": [
+    "JTOUSDT": [
       {
         "timeframe": "*",
         "reason": "exception"
       }
     ],
-    "ZILUSDT": [
+    "STORJUSDT": [
       {
         "timeframe": "*",
         "reason": "exception"
       }
     ],
-    "ALICEUSDT": [
+    "ROSEUSDT": [
       {
         "timeframe": "*",
         "reason": "exception"
       }
     ],
-    "METISUSDT": [
+    "GASUSDT": [
       {
         "timeframe": "*",
         "reason": "exception"
       }
     ],
-    "NEOUSDT": [
-      {
-        "timeframe": "*",
-        "reason": "exception"
-      }
-    ],
-    "IOSTUSDT": [
-      {
-        "timeframe": "*",
-        "reason": "exception"
-      }
-    ],
-    "VTHOUSDT": [
-      {
-        "timeframe": "*",
-        "reason": "exception"
-      }
-    ],
-    "TOSHIUSDT": [
+    "KNCUSDT": [
       {
         "timeframe": "*",
         "reason": "exception"
